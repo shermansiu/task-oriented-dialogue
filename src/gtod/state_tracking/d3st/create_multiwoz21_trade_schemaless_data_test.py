@@ -337,7 +337,7 @@ def test_multiple_choice_1a(schema_file, tmp_path):
         create_multiwoz21_trade_schemaless_data.Options(
             description_type=common.DescriptionType("full_desc"),
             delimiter=":",
-            multiple_choice="1a",
+            multiple_choice=common.MultipleChoiceFormat.one_a,
             use_active_domains_only=True,
             blocked_domains=set(),
         ),
