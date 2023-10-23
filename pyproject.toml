@@ -6,13 +6,14 @@ build-backend = "setuptools.build_meta"
 name = "gtod"
 authors = [
     {name = "Abhinav Rastogi", email = "abhirast@google.com"},
+    {name = "Jeffrey Zhao", email = "jeffreyzhao@google.com"},
+    {name = "Yilei Yang"},
     {name = "Sherman Siu", email = "s8siu@uwaterloo.ca"}
 ]
 description = "task_oriented_dialogue package"
 version = "0.1.0"
 requires-python = ">=3.10"
 classifiers = [
-    "Framework :: Django",
     "Programming Language :: Python :: 3",
 ]
 dependencies = [
@@ -25,7 +26,10 @@ dependencies = [
 dev = [
     "black",
     "flake8",
+    "mypy",
     "pre-commit",
+    "pytest",
+    "pytest-mypy"
 ]
 
 [tool.setuptools]
