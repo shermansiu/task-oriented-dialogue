@@ -30,7 +30,7 @@ import gtod.util
 
 
 @attrs.frozen
-class ConvertSgdT5xSdtPredsToDstc8Config:
+class CliConfig:
     """SDT predictions conversion CLI configuration.
 
     Attributes:
@@ -52,11 +52,6 @@ class ConvertSgdT5xSdtPredsToDstc8Config:
     )
     delimiter: str = attrs.field(default="=")
     evaluate_intent_acc: bool = attrs.field(default=False)
-
-
-config = ConvertSgdT5xSdtPredsToDstc8Config(
-    pathlib.Path("."), pathlib.Path("."), pathlib.Path(".")
-)
 
 
 _SDT_CAT_SLOT_IDENTIFIER = "of possible values"
@@ -121,6 +116,7 @@ def _normalize_value_prediction(
 
 
 def populate_json_predictions(
+    config: CliConfig,
     dialog_id_to_dialogue: dict[str, sgd_utils.DialoguesDict],
     frame_predictions: dict[str, str | dict[str, str]],
 ) -> None:
@@ -175,7 +171,7 @@ def populate_json_predictions(
         frame["state"]["active_intent"] = option_to_intent.get(intent_pred, "NONE")
 
 
-def main() -> None:
+def main(config: CliConfig) -> None:
     assert config is not None
 
     # Load dialogues and flatten into dict(dialogue_id->dialogue).
@@ -201,7 +197,7 @@ def main() -> None:
     with config.t5x_predictions_jsonl.open("r") as predictions_file:
         for line in predictions_file:
             frame_predictions = json.loads(line)
-            populate_json_predictions(dialog_id_to_dialogue, frame_predictions)
+            populate_json_predictions(config, dialog_id_to_dialogue, frame_predictions)
 
     # Write JSON predictions.
     output_dir = config.output_dir
@@ -217,5 +213,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    config = tyro.cli(ConvertSgdT5xSdtPredsToDstc8Config)
-    main()
+    config = tyro.cli(CliConfig)
+    main(config)
