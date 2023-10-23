@@ -396,6 +396,7 @@ def _process_agent_turn(
 
 
 def process_turn(
+    config: CliConfig,
     turn: dict[str, tp.Any],
     turn_info: TurnInfo,
     cumu_slots: collections.OrderedDict,
@@ -594,7 +595,7 @@ def generate_data(config: CliConfig, ordered_slots: collections.OrderedDict, ite
                 prefix = ""
                 for turn_idx, turn in enumerate(dlg["turns"]):
                     prefix, per_frame_turn_info = process_turn(
-                        turn, turn_info, cumu_slots, item_desc, prefix, turn_idx
+                        config, turn, turn_info, cumu_slots, item_desc, prefix, turn_idx
                     )
                     all_turns_per_frame.extend(copy.deepcopy(per_frame_turn_info))
 
