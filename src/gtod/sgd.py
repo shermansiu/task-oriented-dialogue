@@ -11,7 +11,7 @@ class Slot:
     name: str
     description: str
     is_categorical: bool
-    possible_values = list[str]
+    possible_values: list[str]
 
 
 @attrs.frozen
@@ -21,7 +21,7 @@ class Intent:
     is_transactional: bool
     required_slots: list[str]
     optional_slots: list[str]
-    result_slots = list[str]
+    result_slots: list[str] = attrs.field(factory=list)
 
 
 @attrs.frozen
