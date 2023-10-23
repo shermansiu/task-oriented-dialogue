@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gtod"
+authors = [
+    {name = "Abhinav Rastogi", email = "abhirast@google.com"},
+    {name = "Sherman Siu", email = "s8siu@uwaterloo.ca"}
+]
+description = "task_oriented_dialogue package"
+version = "0.1.0"
+requires-python = ">=3.10"
+classifiers = [
+    "Framework :: Django",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "attrs",
+    "cattrs",
+    "tyro"
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "flake8",
+    "pre-commit",
+]
+
+[tool.setuptools]
+packages = ["gtod"]
+package-dir = {"" = "src"}
