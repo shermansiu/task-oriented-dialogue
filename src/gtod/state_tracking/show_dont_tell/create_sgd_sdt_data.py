@@ -79,7 +79,7 @@ class Options:
 
 
 @attrs.frozen
-class CreateSgdSdtConfig:
+class CliConfig:
     """
     Configuration for SGD data generation.
 
@@ -152,9 +152,6 @@ class CreateSgdSdtConfig:
             use_slot_ids=self.use_slot_ids,
             prompt_indices=self.prompt_indices,
         )
-
-
-config: CreateSgdSdtConfig | None = None
 
 
 @attrs.frozen
@@ -288,7 +285,7 @@ def create_examples_from_dialogue(
     return example_strs
 
 
-def main() -> None:
+def main(config: CliConfig) -> None:
     if config.data_percent > 0.0 and config.k_shot > 0:
         raise ValueError("Only one of data_percent and k_shot can be specified!")
 
@@ -364,5 +361,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    config = tyro.cli(CreateSgdSdtConfig)
-    main()
+    config = tyro.cli(CliConfig)
+    main(config)

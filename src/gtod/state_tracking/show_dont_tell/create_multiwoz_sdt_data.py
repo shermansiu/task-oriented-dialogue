@@ -37,7 +37,7 @@ from gtod.state_tracking.utils import text_to_text_utils
 
 
 @attrs.frozen
-class CreateMultiwozSdtDataConfig:
+class CliConfig:
     """Configuration for creating MultiWoZ SDT data.
 
     Attributes:
@@ -291,7 +291,7 @@ def create_sdt_examples(json_data: Json, options: Options) -> list[TextToTextExa
     return examples
 
 
-def main():
+def main(config: CliConfig):
     multiwoz_data = multiwoz_utils.load_data(
         data_path=config.input_dir,
         multiwoz_version=config.multiwoz_version,
@@ -319,5 +319,5 @@ def main():
 
 
 if __name__ == "__main__":
-    config = tyro.cli(CreateMultiwozSdtDataConfig)
-    main()
+    config = tyro.cli(CliConfig)
+    main(config)

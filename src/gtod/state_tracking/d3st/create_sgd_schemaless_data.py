@@ -43,7 +43,7 @@ import gtod.sgd
 
 
 @attrs.frozen
-class CreateSgdSchemalessDataConfig:
+class CliConfig:
     """Config for creating the SGD training data.
 
     Attributes:
@@ -82,11 +82,6 @@ class CreateSgdSchemalessDataConfig:
     )
     data_percent: float = attrs.field(default=0.0)
     uniform_domain_distribution: bool = attrs.field(default=False)
-
-
-config = CreateSgdSchemalessDataConfig(
-    pathlib.Path("."), pathlib.Path("."), pathlib.Path(".")
-)
 
 
 @attrs.define
@@ -135,7 +130,7 @@ class FrameState:
     req_slots: list[str] = attrs.field(factory=list)
 
 
-def load_schema() -> tuple[collections.OrderedDict, SchemaInfo]:
+def load_schema(config: CliConfig) -> tuple[collections.OrderedDict, SchemaInfo]:
     """Loads schema items and descriptions.
 
     Returns:
@@ -212,6 +207,7 @@ def load_schema() -> tuple[collections.OrderedDict, SchemaInfo]:
 
 
 def _process_user_turn(
+    config: CliConfig,
     state: dict[str, tp.Any],
     turn_info: TurnInfo,
     cumu_slots: collections.OrderedDict,
@@ -359,6 +355,7 @@ def _process_user_turn(
 
 
 def _process_agent_turn(
+    config: CliConfig,
     actions: list[dict[str, tp.Any]],
     turn_info: TurnInfo,
     domain: str,
@@ -452,10 +449,10 @@ def process_turn(
             turn_info.out_state_str = "[states]"
             turn_info.out_intent_str = "[intents]"
             desc_to_slot_id = _process_user_turn(
-                frames["state"], turn_info, cumu_slots, domain, item_desc, state_dict
+                config, frames["state"], turn_info, cumu_slots, domain, item_desc, state_dict
             )
         else:
-            _process_agent_turn(frames["actions"], turn_info, domain, desc_to_slot_id)
+            _process_agent_turn(config, frames["actions"], turn_info, domain, desc_to_slot_id)
 
         # Add item description prefixes and states to outputs (coming from user
         # turns).
@@ -473,7 +470,7 @@ def process_turn(
     return user_turn_prefix, turn_info_per_frame
 
 
-def write_examples(turn_list: list[TurnInfo], out_file: io.TextIOWrapper) -> None:
+def write_examples(config: CliConfig, turn_list: list[TurnInfo], out_file: io.TextIOWrapper) -> None:
     """Format output example strings and write to file.
 
     Args:
@@ -524,7 +521,7 @@ def write_examples(turn_list: list[TurnInfo], out_file: io.TextIOWrapper) -> Non
             out_file.write("{}\n".format(example.strip()))
 
 
-def example_filter(turn_list: list[TurnInfo]):
+def example_filter(config: CliConfig, turn_list: list[TurnInfo]):
     """Extract specified percentage of examples.
 
     And ensure uniform domain distribution if specified.
@@ -579,7 +576,7 @@ def example_filter(turn_list: list[TurnInfo]):
         return uniform_turn_list
 
 
-def generate_data(ordered_slots, item_desc):
+def generate_data(config: CliConfig, ordered_slots: collections.OrderedDict, item_desc: SchemaInfo):
     """Generate SGD examples in text format.
 
     Args:
@@ -601,14 +598,14 @@ def generate_data(ordered_slots, item_desc):
                     )
                     all_turns_per_frame.extend(copy.deepcopy(per_frame_turn_info))
 
-            write_examples(example_filter(all_turns_per_frame), out_file)
+            write_examples(config, example_filter(config, all_turns_per_frame), out_file)
 
 
-def main():
-    slots, item_desc = load_schema()
-    generate_data(slots, item_desc)
+def main(config: CliConfig):
+    slots, item_desc = load_schema(config)
+    generate_data(config, slots, item_desc)
 
 
 if __name__ == "__main__":
-    config = tyro.cli(CreateSgdSchemalessDataConfig)
-    main()
+    config = tyro.cli(CliConfig)
+    main(config)

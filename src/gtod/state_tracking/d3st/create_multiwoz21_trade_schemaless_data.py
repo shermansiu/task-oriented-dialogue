@@ -46,7 +46,7 @@ class Options:
 
 
 @attrs.frozen
-class CreateMultiwoz21TradeSchemalessDataConfig:
+class CliConfig:
     """Configuration flags for MultiWOZ dataset processing.
 
     Attributes:
@@ -90,11 +90,6 @@ class CreateMultiwoz21TradeSchemalessDataConfig:
             use_active_domains_only=self.use_active_domains_only,
             blocked_domains=set(self.blocked_domains),
         )
-
-
-config = CreateMultiwoz21TradeSchemalessDataConfig(
-    pathlib.Path("."), pathlib.Path("."), pathlib.Path(".")
-)
 
 
 def create_schemaless_data(
@@ -293,7 +288,7 @@ def create_schemaless_data(
     return examples
 
 
-def main():
+def main(config: CliConfig):
     random.seed(config.random_seed)
     multiwoz_data = multiwoz_utils.load_data(
         data_path=config.multiwoz_dir, multiwoz_version=multiwoz_utils.MultiwozVersion.v21, is_trade=True
@@ -330,5 +325,5 @@ def main():
 
 
 if __name__ == "__main__":
-    config = tyro.cli(CreateMultiwoz21TradeSchemalessDataConfig)
-    main()
+    config = tyro.cli(CliConfig)
+    main(config)
