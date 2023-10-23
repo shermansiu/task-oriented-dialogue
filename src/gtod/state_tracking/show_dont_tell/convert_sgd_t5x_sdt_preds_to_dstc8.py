@@ -96,7 +96,7 @@ def _create_intent_map(input_str: str) -> dict[str, str]:
     intent_str = input_str.split("[intent]")[1].split("[context]")[0].strip()
     intent_option_to_value = {}
     if _SDT_CAT_SLOT_IDENTIFIER not in intent_str:
-        raise ValueError("Improperly formatted intent prompt: %s" % intent_str)
+        raise ValueError(f"Improperly formatted intent prompt: {intent_str}")
     intent_str = intent_str.split(_SDT_CAT_SLOT_IDENTIFIER)[1].strip()
     for option, option_value in re.findall(r"([a-z])\) (.*?)(?=[a-z]\)|$)", intent_str):
         intent_option_to_value[option] = option_value.strip()
