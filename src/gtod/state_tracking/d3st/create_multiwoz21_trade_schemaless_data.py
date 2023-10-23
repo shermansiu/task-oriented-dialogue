@@ -18,7 +18,6 @@
 import collections
 import functools
 import logging
-import os
 import pathlib
 import random
 import string
@@ -297,7 +296,7 @@ def create_schemaless_data(
 def main():
     random.seed(config.random_seed)
     multiwoz_data = multiwoz_utils.load_data(
-        data_path=config.multiwoz_dir, multiwoz_version="2.1", is_trade=True
+        data_path=config.multiwoz_dir, multiwoz_version=multiwoz_utils.MultiwozVersion.v21, is_trade=True
     )
     schema_info = multiwoz_utils.load_schema(config.schema_file)
     options = config.as_options
@@ -326,7 +325,7 @@ def main():
 
     for split, examples in split_to_examples.items():
         text_to_text_utils.write_data(
-            examples, os.path.join(config.output_dir, f"{split}.tfrecord")
+            examples, config.output_dir / f"{split}"
         )
 
 

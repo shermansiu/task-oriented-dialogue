@@ -82,7 +82,7 @@ class SchemaInfo:
 
 
 def load_data(
-    data_path: pathlib.Path, multiwoz_version: MultiwozVersion, is_trade: bool = False
+    data_path: pathlib.Path, multiwoz_version: str | MultiwozVersion, is_trade: bool = False
 ) -> MultiwozData:
     """Loads MultiWOZ dataset.
 
@@ -94,6 +94,8 @@ def load_data(
     Returns:
         A dataclass object storing the loaded dataset.
     """
+    multiwoz_version = MultiwozVersion(multiwoz_version)
+
     # Load dialogue data.
     if is_trade:
         with (data_path / "train_dials.json").open() as f:
@@ -303,7 +305,7 @@ class MultiwozDataclassData:
 
 
 def load_data_as_dataclasses(
-    data_path: pathlib.Path, multiwoz_version: MultiwozVersion, is_trade: bool = False
+    data_path: pathlib.Path, multiwoz_version: str | MultiwozVersion, is_trade: bool = False
 ) -> MultiwozDataclassData:
     """Loads MultiWOZ dataset.
 
@@ -315,6 +317,8 @@ def load_data_as_dataclasses(
     Returns:
         A dataclass object storing the loaded dataset.
     """
+    multiwoz_version = MultiwozVersion(multiwoz_version)
+
     multiwoz_data = load_data(data_path, multiwoz_version, is_trade)
 
     def _dataclass_from_json(json_data: Json) -> dict[str, MultiwozDialog]:

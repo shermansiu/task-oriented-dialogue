@@ -23,7 +23,6 @@ to nyc. ... \ -> [state] train-destination=nyc ...`
 
 import collections
 import functools
-import os
 import pathlib
 import random
 
@@ -132,7 +131,7 @@ class Options:
     multiwoz_version: str
     is_trade: bool
     prompt_format: str
-    prompt_indices: list[int]
+    prompt_indices: list[int] | None
     context_format: str
     target_format: str
     mcq_cat_vals: bool
@@ -315,7 +314,7 @@ def main():
     split_to_examples["dev_test"] = split_to_examples["dev"] + split_to_examples["test"]
     for split, examples in split_to_examples.items():
         text_to_text_utils.write_data(
-            examples, os.path.join(config.output_dir, f"{split}.tfrecord")
+            examples, config.output_dir / f"{split}"
         )
 
 

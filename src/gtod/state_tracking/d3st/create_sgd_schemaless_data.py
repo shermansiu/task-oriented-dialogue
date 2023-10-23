@@ -34,10 +34,12 @@ import string
 import typing as tp
 
 import attrs
+import cattrs
 import tyro
 
 from gtod.state_tracking.d3st.common import MultipleChoiceFormat
 import gtod.util
+import gtod.sgd
 
 
 class GenerationLevelEnum(gtod.util.AutoNameEnum):
@@ -127,7 +129,14 @@ def _merge_domain_slot(domain: str, slot_name: str):
     return f"{domain}-{slot_name}"
 
 
-SchemaInfo = dict[str, dict]
+@attrs.define
+class SchemaInfo:
+    slots: dict[str, str] = attrs.field(factory=dict)
+    intents: dict[str, str] = attrs.field(factory=dict)
+    is_categorical: dict[str, bool] = attrs.field(factory=dict)
+    possible_values: dict[str, list[str]] = attrs.field(factory=dict)
+    slots_rand_name: dict[str, str] = attrs.field(factory=dict)
+    intents_rand_name: dict[str, str] = attrs.field(factory=dict)
 
 
 def load_schema() -> tuple[collections.OrderedDict, SchemaInfo]:
@@ -145,34 +154,28 @@ def load_schema() -> tuple[collections.OrderedDict, SchemaInfo]:
     # TODO(jeffreyzhao): Clean up how we store schema information by using a
     # dataclass.
     slots = collections.OrderedDict()
-    item_desc = {
-        "slots": {},
-        "intents": {},
-        "is_categorical": {},
-        "possible_values": {},
-        "slots_rand_name": {},
-        "intents_rand_name": {},
-    }
+    item_desc = SchemaInfo()
+
     with config.schema_file.open() as sm_file:
-        for schema in json.load(sm_file):
-            domain = schema["service_name"]
+        for schema in cattrs.structure(json.load(sm_file), gtod.sgd.Schema):
+            domain = schema.service_name
             slots.update(
                 {
-                    _merge_domain_slot(domain, slot["name"]): ""
-                    for slot in schema["slots"]
+                    _merge_domain_slot(domain, slot.name): ""
+                    for slot in schema.slots
                 }
             )
-            item_desc["slots"].update(
+            item_desc.slots.update(
                 {
-                    _merge_domain_slot(domain, slot["name"]): slot["description"]
-                    for slot in schema["slots"]
+                    _merge_domain_slot(domain, slot.name): slot.description
+                    for slot in schema.slots
                 }
             )
 
-            for slot in schema["slots"]:
-                name = _merge_domain_slot(domain, slot["name"])
-                is_cat = slot["is_categorical"]
-                poss_vals = slot["possible_values"]
+            for slot in schema.slots:
+                name = _merge_domain_slot(domain, slot.name)
+                is_cat = slot.is_categorical
+                poss_vals = slot.possible_values
 
                 # If this is a categorical slot but the possible value are all numeric,
                 # consider this as a noncat slot.
@@ -180,32 +183,32 @@ def load_schema() -> tuple[collections.OrderedDict, SchemaInfo]:
                     poss_vals = []
                     is_cat = False
 
-                item_desc["is_categorical"][name] = is_cat
-                item_desc["possible_values"][name] = poss_vals
+                item_desc.is_categorical[name] = is_cat
+                item_desc.possible_values[name] = poss_vals
 
-            item_desc["intents"].update(
+            item_desc.intents.update(
                 {
-                    _merge_domain_slot(domain, intent["name"]): intent["description"]
-                    for intent in schema["intents"]
+                    _merge_domain_slot(domain, intent.name): intent.description
+                    for intent in schema.intents
                 }
             )
 
             if config.data_format == DataFormatEnum.rand_name:
-                item_desc["slots_rand_name"].update(
+                item_desc.slots_rand_name.update(
                     {
-                        _merge_domain_slot(domain, slot["name"]): "".join(
-                            random.sample(list(slot["name"]), len(slot["name"]))
+                        _merge_domain_slot(domain, slot.name): "".join(
+                            random.sample(list(slot.name), len(slot.name))
                         )
-                        for slot in schema["slots"]
+                        for slot in schema.slots
                     }
                 )
                 # pylint: disable=g-complex-comprehension
-                item_desc["intents_rand_name"].update(
+                item_desc.intents_rand_name.update(
                     {
-                        _merge_domain_slot(domain, intent["name"]): "".join(
-                            random.sample(list(intent["name"]), len(intent["name"]))
+                        _merge_domain_slot(domain, intent.name): "".join(
+                            random.sample(list(intent.name), len(intent.name))
                         )
-                        for intent in schema["intents"]
+                        for intent in schema.intents
                     }
                 )
                 # pylint: enable=g-complex-comprehension
@@ -249,7 +252,7 @@ def _process_user_turn(
 
     # Clean up.
     desc_to_slot_id = {}
-    slots = list(item_desc["slots"].keys())
+    slots = list(item_desc.slots.keys())
     if config.randomize_items:
         random.shuffle(slots)
     # In multi-domain turn case, desc_prefix already contains desc from the
@@ -257,20 +260,20 @@ def _process_user_turn(
     slot_id = len(state_dict["slot_desc"])
     for slot in slots:
         if config.data_format == DataFormatEnum.full_desc:
-            desc = item_desc["slots"][slot]
+            desc = item_desc.slots[slot]
         elif config.data_format == DataFormatEnum.item_name:
             desc = slot
         elif config.data_format == DataFormatEnum.rand_name:
-            desc = item_desc["slots_rand_name"][slot]
+            desc = item_desc.slots_rand_name[slot]
         else:
             raise ValueError(f"Invalid data format {config.data_format}")
 
         # If we are generating with multiple choice, append this prompt.
         if (
             config.multiple_choice != MultipleChoiceFormat.none
-            and item_desc["is_categorical"][slot]
+            and item_desc.is_categorical[slot]
         ):
-            possible_values = item_desc["possible_values"][slot]
+            possible_values = item_desc.possible_values[slot]
             if config.randomize_items:
                 random.shuffle(possible_values)
             assert len(possible_values) < len(string.ascii_lowercase)
@@ -299,7 +302,7 @@ def _process_user_turn(
                 value = cumu_slots[slot]
                 if (
                     config.multiple_choice != MultipleChoiceFormat.none
-                    and item_desc["is_categorical"][slot]
+                    and item_desc.is_categorical[slot]
                     and value != "dontcare"
                 ):
                     # Convert to multiple choice for categorical slots.
@@ -317,17 +320,17 @@ def _process_user_turn(
     # Handle intents.
     # In multi-domain turn case, intent list already contains intents from the
     # previous domain.
-    intents = list(item_desc["intents"].keys())
+    intents = list(item_desc.intents.keys())
     if config.randomize_items:
         random.shuffle(intents)
     intent_id = len(state_dict["intent_desc"])
     for intent in intents:
         if config.data_format == DataFormatEnum.full_desc:
-            desc = item_desc["intents"][intent]
+            desc = item_desc.intents[intent]
         if config.data_format == DataFormatEnum.item_name:
             desc = intent
         elif config.data_format == DataFormatEnum.rand_name:
-            desc = item_desc["intents_rand_name"][intent]
+            desc = item_desc.intents_rand_name[intent]
         else:
             raise ValueError(f"Invalid data format {config.data_format}")
 

@@ -18,10 +18,8 @@ For processing TRADE pre-processed data,
 see create_multiwoz21_trade_schemaless_data.py.
 """
 
-import enum
 import functools
 import logging
-import os
 import pathlib
 import random
 import string
@@ -156,6 +154,8 @@ def create_schemaless_data(
             return f"{slot_id}{letter}"
         elif options.multiple_choice == "a":
             return letter
+        else:
+            raise ValueError(f"Invalid multiple choice format {options.multiple_choice}")
 
     def _process_one_turn(
         dialog_id: str,
@@ -349,7 +349,7 @@ def main():
 
     for split, examples in split_to_examples.items():
         text_to_text_utils.write_data(
-            examples, os.path.join(config.output_dir, f"{split}.tfrecord")
+            examples, config.output_dir / f"{split}"
         )
 
 

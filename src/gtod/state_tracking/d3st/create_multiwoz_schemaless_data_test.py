@@ -57,7 +57,7 @@ def test_item_name(schema_file, tmp_path):
         multiwoz_data.slot_descriptions,
         create_multiwoz_schemaless_data.Options(
             multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
-            description_type="item_name",
+            description_type=common.DescriptionType.item_name,
             delimiter=":",
             multiple_choice=common.MultipleChoiceFormat.none,
             use_active_domains_only=False,
@@ -110,7 +110,7 @@ def test_shuffled_item_name(schema_file, tmp_path):
         multiwoz_data.slot_descriptions,
         create_multiwoz_schemaless_data.Options(
             multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
-            description_type="shuffled_item_name",
+            description_type=common.DescriptionType.shuffled_item_name,
             delimiter=":",
             multiple_choice=common.MultipleChoiceFormat.one_a,
             use_active_domains_only=False,
