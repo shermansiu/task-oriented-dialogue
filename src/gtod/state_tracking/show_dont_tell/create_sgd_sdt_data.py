@@ -35,31 +35,10 @@ import typing as tp
 import attrs
 import tyro
 import gtod.util
+from gtod.state_tracking.show_dont_tell import common
 from gtod.state_tracking.show_dont_tell import sdt_prompts
 from gtod.state_tracking.show_dont_tell import sdt_utils
 from gtod.state_tracking.utils import sgd_utils
-
-
-class PromptFormat(gtod.util.AutoNameEnum):
-    """Format of the prompt for priming.
-    
-    "separated" means a dialogue followed by a separate string of slots.
-    """
-    separated = enum.auto()
-
-
-class ContextFormat(gtod.util.AutonameEnum):
-    """Format of the dialogue context."""
-    dialogue = enum.auto()
-
-
-class TargetFormat(gtod.util.AutoNameEnum):
-    """Format of the target.
-    
-    "all" and "active" respectively refer to all and only active slots being present in the target.
-    """
-    all = enum.auto()
-    active = enum.auto()
 
 
 Prompt = sdt_prompts.Prompt
@@ -75,7 +54,7 @@ INTENT_SLOT_VALUE_DELIMITER = "="
 INPUT_TARGET_SEP = "\t"
 
 _PROMPTS_MAP = {
-    PromptFormat.separated: sdt_prompts.SGD_SEPARATED_ANNOTATION_PROMPTS,
+    common.PromptFormat.separated: sdt_prompts.SGD_SEPARATED_ANNOTATION_PROMPTS,
 }
 
 
@@ -96,7 +75,7 @@ class Options:
     randomize_cat_vals: bool
     randomize_intents: bool
     use_slot_ids: bool
-    prompt_indices: list[str]
+    prompt_indices: list[int]
 
 
 @attrs.frozen
@@ -126,14 +105,19 @@ class CreateSgdSdtConfig:
         use_intent_slot_descs: Whether to add D3ST descriptions to prompt.
 
     """
+
     input_dir: pathlib.Path
     output_path: pathlib.Path
     sgdx_dir: pathlib.Path | None = attrs.field(default=None)
     subdirs: str = attrs.field(default="train,dev,test")
-    prompt_format: PromptFormat = attrs.field(default=PromptFormat.separated)
-    prompt_indices: int | None = attrs.field(default=None)
-    context_format: ContextFormat = attrs.field(default=ContextFormat.dialogue)
-    target_format: TargetFormat = attrs.field(default=TargetFormat.all)
+    prompt_format: common.PromptFormat = attrs.field(
+        default=common.PromptFormat.separated
+    )
+    prompt_indices: list[int] | None = attrs.field(default=None)
+    context_format: common.ContextFormat = attrs.field(
+        default=common.ContextFormat.dialogue
+    )
+    target_format: common.TargetFormat = attrs.field(default=common.TargetFormat.all)
     add_intents: bool = attrs.field(default=False)
     lowercase: bool = attrs.field(default=True)
     mcq_cat_vals: bool = attrs.field(default=False)
@@ -225,7 +209,7 @@ def build_example(
 def create_examples_from_dialogue(
     dialogue: collections.abc.Mapping[str, tp.Any],
     service_to_prompts: dict[str, list[Prompt]] | None,
-    service_to_schema: collections.abc.SequenceMapping[str, sgd_utils.Schema],
+    service_to_schema: collections.abc.Mapping[str, sgd_utils.Schema],
     options: Options,
 ) -> list[Example]:
     """Returns example strings created from a dialogue.
@@ -356,7 +340,9 @@ def main() -> None:
 
         # Optionally sample a proportion of examples only
         if config.data_percent.value > 0.0:
-            examples = random.sample(examples, int(config.data_percent.value * len(examples)))
+            examples = random.sample(
+                examples, int(config.data_percent.value * len(examples))
+            )
         elif config.k_shot.value > 0:
             # A dict of service to a list of examples belonging to that service.
             service_to_examples = collections.defaultdict(list)

@@ -18,16 +18,18 @@
 """
 
 import collections
+from collections.abc import Mapping, MutableMapping, Sequence
+import pathlib
 import random
 import string
-from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence, Tuple
+import typing as tp
 
-from state_tracking.show_dont_tell import sdt_prompts
-from state_tracking.utils import sgd_utils
+from gtod.state_tracking.show_dont_tell import sdt_prompts
+from gtod.state_tracking.utils import sgd_utils
 
 Prompt = sdt_prompts.Prompt
-Schemas = List[Any]
-SourceToTarget = Dict[str, str]
+Schemas = list[tp.Any]
+SourceToTarget = dict[str, str]
 INTENT_SLOT_VALUE_DELIMITER = "="
 _MCQ_OPTION_IDS = string.ascii_lowercase
 _IS_CAT_VAL_IDENTIFIER = "of possible values"
@@ -35,8 +37,8 @@ _IS_CAT_VAL_IDENTIFIER = "of possible values"
 
 def generate_prompt_str(
     keys: Sequence[str],
-    key_to_prompts: Optional[Mapping[str, Sequence[Prompt]]],
-    prompt_indices: Optional[Sequence[str]] = None,
+    key_to_prompts: Mapping[str, Sequence[Prompt]] | None,
+    prompt_indices: Sequence[int] | None = None,
     add_intents: bool = False,
     mcq_cat_vals: bool = True,
     mcq_intents: bool = True,
@@ -44,12 +46,12 @@ def generate_prompt_str(
     randomize_cat_vals: bool = True,
     randomize_intents: bool = True,
     use_slot_ids: bool = False,
-    key_to_schema: Optional[Mapping[str, sgd_utils.Schema]] = None,
-) -> Tuple[
+    key_to_schema: Mapping[str, sgd_utils.Schema] | None = None,
+) -> tuple[
     str,
-    List[str],
-    Optional[Mapping[str, Mapping[str, str]]],
-    Optional[Mapping[str, str]],
+    list[str],
+    Mapping[str, Mapping[str, str]] | None,
+    Mapping[str, str] | None,
 ]:
     """Generates the prompt string for an example.
 
@@ -77,7 +79,7 @@ def generate_prompt_str(
 
     def _convert_cat_val_prompt_to_mcq(
         value_str: str, cat_val_to_id: MutableMapping[str, str], randomize: bool
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         """Convert categorical value string to MCQ format.
 
         Also updates in place the mapping of MCQ option IDs to values if needed.
@@ -121,7 +123,7 @@ def generate_prompt_str(
         return "", [""], None, None
 
     # Validate prompt_indices
-    if prompt_indices and any([not i.isdigit() for i in prompt_indices]):
+    if prompt_indices and any([not isinstance(i, int) for i in prompt_indices]):
         raise ValueError(
             "Please specify prompt_indices as a list of integers, or "
             "as `None` to use all available prompts. "
@@ -239,7 +241,7 @@ def generate_prompt_str(
     return prompt_str, global_ordered_slots, slot_to_cat_val_to_id, intent_to_id
 
 
-def generate_context_str(history_utterances: List[str], context_format: str) -> str:
+def generate_context_str(history_utterances: list[str], context_format: str) -> str:
     """Generates the context string for an example."""
     if context_format == "dialogue":
         context_str = "[CONTEXT] " + " ".join(history_utterances)
@@ -250,10 +252,10 @@ def generate_context_str(history_utterances: List[str], context_format: str) -> 
 
 
 def generate_target_str(
-    dialogue_state: Dict[str, List[str]],
+    dialogue_state: dict[str, list[str]],
     active_intent: str,
     add_intents: bool,
-    ordered_slots: List[str],
+    ordered_slots: list[str],
     slot_to_cat_val_to_id: Mapping[str, Mapping[str, str]],
     intent_to_id: Mapping[str, str],
     target_format: str,
@@ -279,7 +281,7 @@ def generate_target_str(
     if target_format in ["all", "active"]:
         slot_strs = []
         for idx, slot in enumerate(ordered_slots):
-            slot_value = dialogue_state.get(slot)  # List[str]
+            slot_value = dialogue_state.get(slot)  # list[str]
 
             # TODO(harrisonlee): Check if we should be using first slot value for SGD
             if slot_value:
@@ -318,9 +320,9 @@ def generate_target_str(
 
 
 def _create_schema_name_map(
-    source_subdir_to_schemas: Dict[str, Schemas],
-    target_subdir_to_schemas: Dict[str, Schemas],
-) -> Tuple[SourceToTarget, Dict[str, SourceToTarget], Dict[str, SourceToTarget]]:
+    source_subdir_to_schemas: dict[str, Schemas],
+    target_subdir_to_schemas: dict[str, Schemas],
+) -> tuple[SourceToTarget, dict[str, SourceToTarget], dict[str, SourceToTarget]]:
     """Creates mapping from source to target schema element names.
 
     Args:
@@ -365,8 +367,10 @@ def _create_schema_name_map(
 
 
 def create_sgdx_prompts(
-    service_to_prompts: Mapping[str, List[Prompt]], sgd_dir: str, sgdx_dir: str
-) -> Dict[str, List[Prompt]]:
+    service_to_prompts: Mapping[str, list[Prompt]],
+    sgd_dir: pathlib.Path,
+    sgdx_dir: pathlib.Path,
+) -> dict[str, list[Prompt]]:
     """Creates a SGD-X version of SGD prompts.
 
     Note that currently does not support intents.

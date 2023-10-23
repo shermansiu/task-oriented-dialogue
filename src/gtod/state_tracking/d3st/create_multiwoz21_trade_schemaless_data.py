@@ -39,9 +39,9 @@ TextToTextExample = text_to_text_utils.TextToTextExample
 
 @attrs.frozen
 class Options:
-    description_type: str
+    description_type: DescriptionType
     delimiter: str
-    multiple_choice: str
+    multiple_choice: MultipleChoiceFormat
     use_active_domains_only: bool
     blocked_domains: set[str]
 
@@ -69,15 +69,18 @@ class CreateMultiwoz21TradeSchemalessDataConfig:
         blocked_domains: Domains to exclude when running zero-shot cross-domain experiments
             as in paper https://aclanthology.org/2021.naacl-main.448.pdf.
     """
+
     multiwoz_dir: pathlib.Path
     output_dir: pathlib.Path
     schema_file: pathlib.Path
     random_seed: int | None = attrs.field(default=None)
     description_type: DescriptionType = attrs.field(default=DescriptionType.full_desc)
     delimiter: str = attrs.field(default=":")
-    multiple_choice: MultipleChoiceFormat = attrs.field(default=MultipleChoiceFormat.none)
+    multiple_choice: MultipleChoiceFormat = attrs.field(
+        default=MultipleChoiceFormat.none
+    )
     use_active_domains_only: bool = attrs.field(default=False)
-    blocked_domains: tuple = attrs.field(default=())
+    blocked_domains: tuple[str] = attrs.field(default=())
 
     @functools.cached_property
     def as_options(self) -> Options:
@@ -141,7 +144,9 @@ def create_schemaless_data(
         elif options.multiple_choice == "a":
             return letter
         else:
-            raise ValueError(f"Invalid multiple choice format {options.multiple_choice}")
+            raise ValueError(
+                f"Invalid multiple choice format {options.multiple_choice}"
+            )
 
     def _process_one_turn(
         dialog_id: str,

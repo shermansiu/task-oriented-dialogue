@@ -41,9 +41,9 @@ def config_saver(*args, **kwargs):
     "level, data_format",
     [
         ("dst", "full_desc"),
-        # ("dst_intent", "full_desc"),
+        ("dst_intent", "full_desc"),
     ],
-    ids=["create_sgd_schemaless_dst"] #, "create_sgd_schemaless_dst_intent"],
+    ids=["create_sgd_schemaless_dst"],  # , "create_sgd_schemaless_dst_intent"],
 )
 def test_generate_data_full_desc(
     level, data_format, tmp_path: pathlib.Path, testdata_dir: pathlib.Path
@@ -127,11 +127,17 @@ def test_multiple_choice(level, data_format, tmp_path, testdata_dir):
     ids=["create_uniform_domain_10percent", "create_random_domain_50percent"],
 )
 def test_generate_data_sample(
-    level, data_format, data_percent, uniform_domain_distribution, tmp_path, testdata_dir
+    level,
+    data_format,
+    data_percent,
+    uniform_domain_distribution,
+    tmp_path,
+    testdata_dir,
 ):
     temp_output = tmp_path / "output"
     ref_output = (
-        testdata_dir / f"sgd_text_v2_uniform_{uniform_domain_distribution}_{data_percent}"
+        testdata_dir
+        / f"sgd_text_v2_uniform_{uniform_domain_distribution}_{data_percent}"
     )
 
     with config_saver(

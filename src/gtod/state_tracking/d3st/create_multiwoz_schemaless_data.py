@@ -34,13 +34,6 @@ from gtod.state_tracking.utils import multiwoz_utils
 from gtod.state_tracking.utils import text_to_text_utils
 
 
-class MultiwozVersion(str, enum.Enum):
-    v21 = "2.1"
-    v22 = "2.2"
-    v23 = "2.3"
-    v24 = "2.4"
-
-
 Json = multiwoz_utils.Json
 SchemaInfo = multiwoz_utils.SchemaInfo
 TextToTextExample = text_to_text_utils.TextToTextExample
@@ -48,10 +41,10 @@ TextToTextExample = text_to_text_utils.TextToTextExample
 
 @attrs.frozen
 class Options:
-    multiwoz_version: str
-    description_type: str
+    multiwoz_version: multiwoz_utils.MultiwozVersion
+    description_type: DescriptionType
     delimiter: str
-    multiple_choice: str
+    multiple_choice: MultipleChoiceFormat
     use_active_domains_only: bool
     blocked_domains: set[str]
     use_target_separators: bool
@@ -60,7 +53,7 @@ class Options:
 @attrs.frozen
 class CreateMultiwozSchemalessDataConfig:
     """Config for creating schemaless Multiwoz data.
-    
+
     Attributes:
         multiwoz_dir: Required. Path to the original MultiWOZ datasets.
         output_dir: Required. Output file path.
@@ -82,16 +75,21 @@ class CreateMultiwozSchemalessDataConfig:
             cross-domain experiments as in paper https://aclanthology.org/2021.naacl-main.448.pdf
         use_target_separators: If true, separate target slot-value pairs using ;.
     """
+
     multiwoz_dir: pathlib.Path
     output_dir: pathlib.Path
     schema_file: pathlib.Path
-    multiwoz_version: MultiwozVersion = attrs.field(default=MultiwozVersion.v24)
+    multiwoz_version: multiwoz_utils.MultiwozVersion = attrs.field(
+        default=multiwoz_utils.MultiwozVersion.v24
+    )
     random_seed: int | None = attrs.field(default=None)
     description_type: DescriptionType = attrs.field(default=DescriptionType.full_desc)
     delimiter: str = attrs.field(default=":")
-    multiple_choice: MultipleChoiceFormat = attrs.field(default=MultipleChoiceFormat.none)
+    multiple_choice: MultipleChoiceFormat = attrs.field(
+        default=MultipleChoiceFormat.none
+    )
     use_active_domains_only: bool = attrs.field(default=False)
-    blocked_domains: tuple= attrs.field(default=())
+    blocked_domains: tuple[str] = attrs.field(default=())
     use_target_separators: bool = attrs.field(default=False)
 
     @functools.cached_property

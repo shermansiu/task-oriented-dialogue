@@ -22,91 +22,88 @@ to nyc. ... \ -> [state] train-destination=nyc ...`
 """
 
 import collections
-import dataclasses
+import functools
 import os
+import pathlib
 import random
 
 import attrs
+import tyro
 
-from state_tracking.show_dont_tell import sdt_prompts
-from state_tracking.show_dont_tell import sdt_utils
-from state_tracking.utils import multiwoz_utils
-from state_tracking.utils import text_to_text_utils
-
-FLAGS = flags.FLAGS
-
-_INPUT_DIR = flags.DEFINE_string(
-    "input_dir", None, "Path to the original MultiWOZ datasets."
-)
-_OUTPUT_DIR = flags.DEFINE_string("output_dir", None, "Output file path.")
-_SCHEMA_FILE = flags.DEFINE_string(
-    "schema_file", None, "MultiWOZ schema file in 2.2/SGD format."
-)
-_MULTIWOZ_VERSION = flags.DEFINE_enum(
-    "multiwoz_version", "2.1", ("2.1", "2.2", "2.3", "2.4"), "MultiWOZ dataset version."
-)
-_IS_TRADE = flags.DEFINE_bool(
-    "is_trade", True, "Whether the data is TRADE-preprocessed or not."
-)
-_PROMPT_FORMAT = flags.DEFINE_enum(
-    "prompt_format",
-    "separated",
-    ["separated"],
-    "Format of the prompt for priming. "
-    '"separated" means a dialogue followed by a separate string of slots.',
-)
-_PROMPT_INDICES = flags.DEFINE_list(
-    "prompt_indices",
-    None,
-    "Indices of the prompts for each service to be used for generating "
-    "examples. Specify one or more numeric indices (starting from 0), or `None` "
-    "to use all prompts for a given service.",
-)
-_CONTEXT_FORMAT = flags.DEFINE_enum(
-    "context_format", "dialogue", ["dialogue"], "Format of the dialogue context."
-)
-_TARGET_FORMAT = flags.DEFINE_enum(
-    "target_format",
-    "all",
-    ["all"],
-    'Format of the target. "all" refers to' "all slots being in the target.",
-)
-_LOWERCASE = flags.DEFINE_bool(
-    "lowercase", True, "Whether to lowercase the generated example."
-)
-_MCQ_CAT_VALS = flags.DEFINE_bool(
-    "mcq_cat_vals",
-    False,
-    "Whether to enumerate categorical values in the form of a multiple choice "
-    "question in the prompt.",
-)
-_RANDOMIZE_SLOTS = flags.DEFINE_bool(
-    "randomize_slots", True, "Whether to randomize slot order of the prompt."
-)
-_RANDOMIZE_CAT_VALS = flags.DEFINE_bool(
-    "randomize_cat_vals",
-    True,
-    "Whether to randomize order of categorical values in prompt.",
-)
-_SHUFFLE = flags.DEFINE_bool(
-    "shuffle", True, "Whether to randomly shuffle examples before writing out."
-)
-_USE_ACTIVE_DOMAINS_ONLY = flags.DEFINE_bool(
-    "use_active_domains_only",
-    False,
-    "If true, only include domains that are active in this dialogue in prompt.",
-)
-_BLOCKED_DOMAINS = flags.DEFINE_list(
-    "blocked_domains",
-    [],
-    "Don't include these domains "
-    "if set. This is used to run zero-shot "
-    "cross-domain experiments as in paper "
-    "https://aclanthology.org/2021.naacl-main.448.pdf.",
-)
+from gtod.state_tracking.show_dont_tell import common
+from gtod.state_tracking.show_dont_tell import sdt_prompts
+from gtod.state_tracking.show_dont_tell import sdt_utils
+from gtod.state_tracking.utils import multiwoz_utils
+from gtod.state_tracking.utils import text_to_text_utils
 
 
-# Use OrderedDict for JSON to preserve field order.
+@attrs.frozen
+class CreateMultiwozSdtDataConfig:
+    """Configuration for creating MultiWoZ SDT data.
+
+    Attributes:
+        input_dir: Path to the original MultiWOZ datasets.
+        output_dir: Output file path.
+        schema_file: MultiWOZ schema file in 2.2/SGD format.
+        multiwoz_version: MultiWOZ dataset version. One of ["2.1", "2.2", "2.3", "2.4"].
+        is_trade: Whether the data is TRADE-preprocessed or not.
+        prompt_format: Format of the prompt for priming. Only "separated" is supported.
+            "separated" means a dialogue followed by a separate string of slots.
+        prompt_indices: Indices of the prompts for each service to be used for generating examples.
+            Specify one or more numeric indices (starting from 0), or `None` to use all prompts for a given service.
+        context_format: Format of the dialogue context. Only "dialogue" is supported.
+        target_format: Format of the target. "all" refers to all slots being in the target.
+        lowercase: Whether to lowercase the generated example.
+        mcq_cat_vals: Whether to enumerate categorical values in the form of a multiple choice question in the prompt.
+        randomize_slots: Whether to randomize slot order of the prompt.
+        randomize_cat_vals: Whether to randomize the order of categorical values in the prompt.
+        shuffle: Whether to randomly shuffle examples before writing out.
+        use_active_domains_only: If true, only include domains that are active in this dialogue in the prompt.
+        blocked_domains: Domains to exclude. Used for zero-shot cross-domain experiments.
+    """
+
+    input_dir: pathlib.Path
+    output_dir: pathlib.Path
+    schema_file: pathlib.Path
+    multiwoz_version: multiwoz_utils.MultiwozVersion = attrs.field(
+        default=multiwoz_utils.MultiwozVersion.v21
+    )
+    is_trade: bool = attrs.field(default=True)
+    prompt_format: common.PromptFormat = attrs.field(
+        default=common.PromptFormat.separated
+    )
+    prompt_indices: list[int] | None = attrs.field(default=None)
+    context_format: common.ContextFormat = attrs.field(
+        default=common.ContextFormat.dialogue
+    )
+    target_format: common.TargetFormat = attrs.field(default=common.TargetFormat.all)
+    lowercase: bool = attrs.field(default=True)
+    mcq_cat_vals: bool = attrs.field(default=False)
+    randomize_slots: bool = attrs.field(default=True)
+    randomize_cat_vals: bool = attrs.field(default=True)
+    shuffle: bool = attrs.field(default=True)
+    use_active_domains_only: bool = attrs.field(default=False)
+    blocked_domains: list[str] = attrs.field(factory=list)
+
+    @functools.cached_property
+    def as_options(self):
+        return Options(
+            multiwoz_version=self.multiwoz_version,
+            is_trade=self.is_trade,
+            prompt_format=self.prompt_format,
+            prompt_indices=self.prompt_indices,
+            context_format=self.context_format,
+            target_format=self.target_format,
+            mcq_cat_vals=self.mcq_cat_vals,
+            randomize_slots=self.randomize_slots,
+            randomize_cat_vals=self.randomize_cat_vals,
+            use_active_domains_only=self.use_active_domains_only,
+            blocked_domains=set(self.blocked_domains),
+            lowercase=self.lowercase,
+        )
+
+
+# Use Ordereddict for JSON to preserve field order.
 Json = collections.OrderedDict
 MultiwozData = multiwoz_utils.MultiwozData
 SchemaInfo = multiwoz_utils.SchemaInfo
@@ -128,27 +125,27 @@ _PROMPTS_MAP = {
 }
 
 
-@dataclasses.dataclass
+@attrs.frozen
 class Options:
     """Options for generating SDT examples."""
 
     multiwoz_version: str
     is_trade: bool
     prompt_format: str
-    prompt_indices: List[str]
+    prompt_indices: list[int]
     context_format: str
     target_format: str
     mcq_cat_vals: bool
     randomize_slots: bool
     randomize_cat_vals: bool
     use_active_domains_only: bool
-    blocked_domains: Set[str]
+    blocked_domains: set[str]
     lowercase: bool
 
 
 def _normalize_multiwoz_slot_values(
-    dialogue_state: Dict[str, str], multiwoz_version: str
-) -> Dict[str, List[str]]:
+    dialogue_state: dict[str, str], multiwoz_version: str
+) -> dict[str, list[str]]:
     """Normalizes multiwoz slot values into a common format."""
     new_state = {}
 
@@ -177,8 +174,8 @@ def _normalize_multiwoz_slot_values(
 def _process_one_turn(
     dialog_id: str,
     turn: int,
-    belief_state: Dict[str, str],
-    history_utterances: List[str],
+    belief_state: dict[str, str],
+    history_utterances: list[str],
     options: Options,
 ) -> TextToTextExample:
     """Processes a single dialogue turn into a `TextToTextExample`."""
@@ -244,7 +241,7 @@ def _process_one_turn(
     )
 
 
-def create_sdt_examples(json_data: Json, options: Options) -> List[TextToTextExample]:
+def create_sdt_examples(json_data: Json, options: Options) -> list[TextToTextExample]:
     """Converts raw MultiWOZ data into "Show Don't Tell" examples."""
     examples = []
 
@@ -295,27 +292,14 @@ def create_sdt_examples(json_data: Json, options: Options) -> List[TextToTextExa
     return examples
 
 
-def main(_):
+def main():
     multiwoz_data = multiwoz_utils.load_data(
-        data_path=_INPUT_DIR.value,
-        multiwoz_version=_MULTIWOZ_VERSION.value,
-        is_trade=_IS_TRADE.value,
+        data_path=config.input_dir,
+        multiwoz_version=config.multiwoz_version,
+        is_trade=config.is_trade,
     )
 
-    options = Options(
-        multiwoz_version=_MULTIWOZ_VERSION.value,
-        is_trade=_IS_TRADE.value,
-        prompt_format=_PROMPT_FORMAT.value,
-        prompt_indices=_PROMPT_INDICES.value,
-        context_format=_CONTEXT_FORMAT.value,
-        target_format=_TARGET_FORMAT.value,
-        mcq_cat_vals=_MCQ_CAT_VALS.value,
-        randomize_slots=_RANDOMIZE_SLOTS.value,
-        randomize_cat_vals=_RANDOMIZE_CAT_VALS.value,
-        use_active_domains_only=_USE_ACTIVE_DOMAINS_ONLY.value,
-        blocked_domains=set(_BLOCKED_DOMAINS.value),
-        lowercase=_LOWERCASE.value,
-    )
+    options = config.as_options
 
     # Create SDT examples
     split_to_examples = {
@@ -325,18 +309,16 @@ def main(_):
     }
 
     # Write out examples
-    if _SHUFFLE.value:
+    if config.shuffle:
         for examples in split_to_examples.values():
             random.shuffle(examples)
     split_to_examples["dev_test"] = split_to_examples["dev"] + split_to_examples["test"]
     for split, examples in split_to_examples.items():
         text_to_text_utils.write_data(
-            examples, os.path.join(_OUTPUT_DIR.value, f"{split}.tfrecord")
+            examples, os.path.join(config.output_dir, f"{split}.tfrecord")
         )
 
 
 if __name__ == "__main__":
-    flags.mark_flag_as_required("input_dir")
-    flags.mark_flag_as_required("output_dir")
-    flags.mark_flag_as_required("schema_file")
-    app.run(main)
+    config = tyro.cli(CreateMultiwozSdtDataConfig)
+    main()

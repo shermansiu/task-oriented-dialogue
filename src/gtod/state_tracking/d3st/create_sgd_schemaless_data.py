@@ -94,7 +94,7 @@ class CreateSgdSchemalessDataConfig:
     uniform_domain_distribution: bool = attrs.field(default=False)
 
 
-config= CreateSgdSchemalessDataConfig(
+config = CreateSgdSchemalessDataConfig(
     pathlib.Path("."), pathlib.Path("."), pathlib.Path(".")
 )
 
@@ -266,7 +266,10 @@ def _process_user_turn(
             raise ValueError(f"Invalid data format {config.data_format}")
 
         # If we are generating with multiple choice, append this prompt.
-        if config.multiple_choice != MultipleChoiceFormat.none and item_desc["is_categorical"][slot]:
+        if (
+            config.multiple_choice != MultipleChoiceFormat.none
+            and item_desc["is_categorical"][slot]
+        ):
             possible_values = item_desc["possible_values"][slot]
             if config.randomize_items:
                 random.shuffle(possible_values)

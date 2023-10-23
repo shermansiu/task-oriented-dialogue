@@ -20,6 +20,7 @@ import sys
 
 import pytest
 
+from gtod.state_tracking.d3st import common
 from gtod.state_tracking.d3st import create_multiwoz_schemaless_data
 from gtod.state_tracking.utils import multiwoz_utils
 
@@ -28,9 +29,12 @@ from gtod.state_tracking.utils import multiwoz_utils
 def schema_file(tmp_path, testdata_dir):
     random.seed(31415)
     schema_file_ = tmp_path / "schema.json"
-    
+
     shutil.copy(testdata_dir / "multiwoz_data.json", tmp_path / "data.json")
-    shutil.copy(testdata_dir / "multiwoz_slot_descriptions.json", tmp_path / "slot_descriptions.json")
+    shutil.copy(
+        testdata_dir / "multiwoz_slot_descriptions.json",
+        tmp_path / "slot_descriptions.json",
+    )
     shutil.copy(testdata_dir / "multiwoz_schema_schemaless.json", schema_file_)
 
     # Touch empty files for (val|test)ListFile.json
@@ -42,7 +46,9 @@ def schema_file(tmp_path, testdata_dir):
 
 def test_item_name(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data_as_dataclasses(
-        data_path=tmp_path, multiwoz_version="2.4", is_trade=False
+        data_path=tmp_path,
+        multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+        is_trade=False,
     )
     schema_info = multiwoz_utils.load_schema(schema_file)
     examples = create_multiwoz_schemaless_data.create_schemaless_data(
@@ -50,10 +56,10 @@ def test_item_name(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz_schemaless_data.Options(
-            multiwoz_version="2.4",
+            multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
             description_type="item_name",
             delimiter=":",
-            multiple_choice="none",
+            multiple_choice=common.MultipleChoiceFormat.none,
             use_active_domains_only=False,
             blocked_domains=set(),
             use_target_separators=False,
@@ -93,7 +99,9 @@ def test_item_name(schema_file, tmp_path):
 
 def test_shuffled_item_name(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data_as_dataclasses(
-        data_path=tmp_path, multiwoz_version="2.4", is_trade=False
+        data_path=tmp_path,
+        multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+        is_trade=False,
     )
     schema_info = multiwoz_utils.load_schema(schema_file)
     examples = create_multiwoz_schemaless_data.create_schemaless_data(
@@ -101,10 +109,10 @@ def test_shuffled_item_name(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz_schemaless_data.Options(
-            multiwoz_version="2.4",
+            multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
             description_type="shuffled_item_name",
             delimiter=":",
-            multiple_choice="1a",
+            multiple_choice=common.MultipleChoiceFormat.one_a,
             use_active_domains_only=False,
             blocked_domains=set(),
             use_target_separators=False,
@@ -152,9 +160,12 @@ def test_shuffled_item_name(schema_file, tmp_path):
         "taxi-departure",
     )
 
+
 def test_full_desc(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data_as_dataclasses(
-        data_path=tmp_path, multiwoz_version="2.4", is_trade=False
+        data_path=tmp_path,
+        multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+        is_trade=False,
     )
     schema_info = multiwoz_utils.load_schema(schema_file)
     examples = create_multiwoz_schemaless_data.create_schemaless_data(
@@ -162,10 +173,10 @@ def test_full_desc(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz_schemaless_data.Options(
-            multiwoz_version="2.4",
-            description_type="full_desc",
+            multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+            description_type=common.DescriptionType.full_desc,
             delimiter=":",
-            multiple_choice="none",
+            multiple_choice=common.MultipleChoiceFormat.none,
             use_active_domains_only=False,
             blocked_domains=set(),
             use_target_separators=False,
@@ -208,9 +219,12 @@ def test_full_desc(schema_file, tmp_path):
         "taxi-destination",
     )
 
+
 def test_full_desc_with_domain(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data_as_dataclasses(
-        data_path=tmp_path, multiwoz_version="2.4", is_trade=False
+        data_path=tmp_path,
+        multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+        is_trade=False,
     )
     schema_info = multiwoz_utils.load_schema(schema_file)
     examples = create_multiwoz_schemaless_data.create_schemaless_data(
@@ -218,10 +232,10 @@ def test_full_desc_with_domain(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz_schemaless_data.Options(
-            multiwoz_version="2.4",
-            description_type="full_desc_with_domain",
+            multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+            description_type=common.DescriptionType.full_desc_with_domain,
             delimiter=":",
-            multiple_choice="none",
+            multiple_choice=common.MultipleChoiceFormat.none,
             use_active_domains_only=False,
             blocked_domains=set(),
             use_target_separators=False,
@@ -268,9 +282,12 @@ def test_full_desc_with_domain(schema_file, tmp_path):
         "taxi-destination",
     )
 
+
 def test_delimiter(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data_as_dataclasses(
-        data_path=tmp_path, multiwoz_version="2.4", is_trade=False
+        data_path=tmp_path,
+        multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+        is_trade=False,
     )
     schema_info = multiwoz_utils.load_schema(schema_file)
     examples = create_multiwoz_schemaless_data.create_schemaless_data(
@@ -278,10 +295,10 @@ def test_delimiter(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz_schemaless_data.Options(
-            multiwoz_version="2.4",
-            description_type="full_desc",
+            multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+            description_type=common.DescriptionType.full_desc,
             delimiter="=",
-            multiple_choice="none",
+            multiple_choice=common.MultipleChoiceFormat.none,
             use_active_domains_only=False,
             blocked_domains=set(),
             use_target_separators=False,
@@ -324,21 +341,20 @@ def test_delimiter(schema_file, tmp_path):
         "taxi-destination",
     )
 
+
 def test_multiple_choice_a(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data_as_dataclasses(
-        data_path=tmp_path, multiwoz_version="2.4", is_trade=False
+        data_path=tmp_path,
+        multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+        is_trade=False,
     )
     schema_info = multiwoz_utils.load_schema(schema_file)
 
     # The testdata example doesn't have any categorical slots, so mock some.
-    schema_info.slots_by_domain["train"][
-        "train-departure"
-    ] = multiwoz_utils.SlotInfo(
+    schema_info.slots_by_domain["train"]["train-departure"] = multiwoz_utils.SlotInfo(
         is_categorical=True, possible_values=["leicester", "cambridge"]
     )
-    schema_info.slots_by_domain["train"][
-        "train-destination"
-    ] = multiwoz_utils.SlotInfo(
+    schema_info.slots_by_domain["train"]["train-destination"] = multiwoz_utils.SlotInfo(
         is_categorical=True, possible_values=["leicester", "cambridge"]
     )
 
@@ -347,10 +363,10 @@ def test_multiple_choice_a(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz_schemaless_data.Options(
-            multiwoz_version="2.4",
-            description_type="full_desc",
+            multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+            description_type=common.DescriptionType.full_desc,
             delimiter=":",
-            multiple_choice="a",
+            multiple_choice=common.MultipleChoiceFormat.a,
             use_active_domains_only=True,
             blocked_domains=set(),
             use_target_separators=False,
@@ -375,21 +391,20 @@ def test_multiple_choice_a(schema_file, tmp_path):
         "train-day, train-destination",
     )
 
+
 def test_multiple_choice_1a(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data_as_dataclasses(
-        data_path=tmp_path, multiwoz_version="2.4", is_trade=False
+        data_path=tmp_path,
+        multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+        is_trade=False,
     )
     schema_info = multiwoz_utils.load_schema(schema_file)
 
     # The testdata example doesn't have any categorical slots, so mock some.
-    schema_info.slots_by_domain["train"][
-        "train-departure"
-    ] = multiwoz_utils.SlotInfo(
+    schema_info.slots_by_domain["train"]["train-departure"] = multiwoz_utils.SlotInfo(
         is_categorical=True, possible_values=["leicester", "cambridge"]
     )
-    schema_info.slots_by_domain["train"][
-        "train-destination"
-    ] = multiwoz_utils.SlotInfo(
+    schema_info.slots_by_domain["train"]["train-destination"] = multiwoz_utils.SlotInfo(
         is_categorical=True, possible_values=["leicester", "cambridge"]
     )
 
@@ -398,10 +413,10 @@ def test_multiple_choice_1a(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz_schemaless_data.Options(
-            multiwoz_version="2.4",
-            description_type="full_desc",
+            multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+            description_type=common.DescriptionType.full_desc,
             delimiter=":",
-            multiple_choice="1a",
+            multiple_choice=common.MultipleChoiceFormat.one_a,
             use_active_domains_only=True,
             blocked_domains=set(),
             use_target_separators=False,
@@ -426,21 +441,20 @@ def test_multiple_choice_1a(schema_file, tmp_path):
         "train-day, train-destination",
     )
 
+
 def test_target_separators(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data_as_dataclasses(
-        data_path=tmp_path, multiwoz_version="2.4", is_trade=False
+        data_path=tmp_path,
+        multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+        is_trade=False,
     )
     schema_info = multiwoz_utils.load_schema(schema_file)
 
     # The testdata example doesn't have any categorical slots, so mock some.
-    schema_info.slots_by_domain["train"][
-        "train-departure"
-    ] = multiwoz_utils.SlotInfo(
+    schema_info.slots_by_domain["train"]["train-departure"] = multiwoz_utils.SlotInfo(
         is_categorical=True, possible_values=["leicester", "cambridge"]
     )
-    schema_info.slots_by_domain["train"][
-        "train-destination"
-    ] = multiwoz_utils.SlotInfo(
+    schema_info.slots_by_domain["train"]["train-destination"] = multiwoz_utils.SlotInfo(
         is_categorical=True, possible_values=["leicester", "cambridge"]
     )
 
@@ -449,10 +463,10 @@ def test_target_separators(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz_schemaless_data.Options(
-            multiwoz_version="2.4",
-            description_type="full_desc",
+            multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+            description_type=common.DescriptionType.full_desc,
             delimiter=":",
-            multiple_choice="1a",
+            multiple_choice=common.MultipleChoiceFormat.one_a,
             use_active_domains_only=True,
             blocked_domains=set(),
             use_target_separators=True,
@@ -477,9 +491,12 @@ def test_target_separators(schema_file, tmp_path):
         "train-day, train-destination",
     )
 
+
 def test_blocked_one_domain(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data_as_dataclasses(
-        data_path=tmp_path, multiwoz_version="2.4", is_trade=False
+        data_path=tmp_path,
+        multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+        is_trade=False,
     )
     schema_info = multiwoz_utils.load_schema(schema_file)
 
@@ -488,10 +505,10 @@ def test_blocked_one_domain(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz_schemaless_data.Options(
-            multiwoz_version="2.4",
-            description_type="full_desc_with_domain",
+            multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+            description_type=common.DescriptionType.full_desc_with_domain,
             delimiter=":",
-            multiple_choice="none",
+            multiple_choice=common.MultipleChoiceFormat.none,
             use_active_domains_only=False,
             blocked_domains=set(["hotel"]),
             use_target_separators=False,
@@ -544,9 +561,12 @@ def test_blocked_one_domain(schema_file, tmp_path):
         "taxi-destination",
     )
 
+
 def test_blocked_many_domains(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data_as_dataclasses(
-        data_path=tmp_path, multiwoz_version="2.4", is_trade=False
+        data_path=tmp_path,
+        multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+        is_trade=False,
     )
     schema_info = multiwoz_utils.load_schema(schema_file)
 
@@ -555,10 +575,10 @@ def test_blocked_many_domains(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz_schemaless_data.Options(
-            multiwoz_version="2.4",
-            description_type="full_desc_with_domain",
+            multiwoz_version=multiwoz_utils.MultiwozVersion.v24,
+            description_type=common.DescriptionType.full_desc_with_domain,
             delimiter=":",
-            multiple_choice="none",
+            multiple_choice=common.MultipleChoiceFormat.none,
             use_active_domains_only=False,
             blocked_domains=set(["hotel", "train"]),
             use_target_separators=False,

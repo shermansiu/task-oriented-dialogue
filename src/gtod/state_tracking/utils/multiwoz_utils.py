@@ -19,6 +19,7 @@
 
 import collections
 import collections.abc
+import enum
 import itertools
 import json
 import os
@@ -28,6 +29,13 @@ import attrs
 
 # Use OrderedDict for JSON to preserve field order.
 Json = collections.OrderedDict
+
+
+class MultiwozVersion(str, enum.Enum):
+    v21 = "2.1"
+    v22 = "2.2"
+    v23 = "2.3"
+    v24 = "2.4"
 
 
 @attrs.frozen
@@ -74,7 +82,7 @@ class SchemaInfo:
 
 
 def load_data(
-    data_path: pathlib.Path, multiwoz_version: str, is_trade: bool = False
+    data_path: pathlib.Path, multiwoz_version: MultiwozVersion, is_trade: bool = False
 ) -> MultiwozData:
     """Loads MultiWOZ dataset.
 
@@ -132,7 +140,9 @@ def load_data(
     return MultiwozData(train_json, dev_json, test_json, slot_descriptions)
 
 
-def load_slot_descriptions(slot_descriptions_file_path: pathlib.Path) -> dict[str, list[str]]:
+def load_slot_descriptions(
+    slot_descriptions_file_path: pathlib.Path,
+) -> dict[str, list[str]]:
     """Loads slot descriptions from Json file."""
 
     # Note that 2.4 doesn't come with a
@@ -282,7 +292,9 @@ class MultiwozDataclassData:
             self.test_dialogs.items(),
         )
 
-    def dialogs_by_split(self) -> collections.abc.Iterator[tuple[str, dict[str, MultiwozDialog]]]:
+    def dialogs_by_split(
+        self,
+    ) -> collections.abc.Iterator[tuple[str, dict[str, MultiwozDialog]]]:
         yield from (
             ("train", self.train_dialogs),
             ("dev", self.dev_dialogs),
@@ -291,7 +303,7 @@ class MultiwozDataclassData:
 
 
 def load_data_as_dataclasses(
-    data_path: pathlib.Path, multiwoz_version: str, is_trade: bool = False
+    data_path: pathlib.Path, multiwoz_version: MultiwozVersion, is_trade: bool = False
 ) -> MultiwozDataclassData:
     """Loads MultiWOZ dataset.
 

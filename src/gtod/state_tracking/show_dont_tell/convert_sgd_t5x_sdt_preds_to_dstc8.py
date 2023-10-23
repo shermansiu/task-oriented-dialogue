@@ -15,58 +15,61 @@
 r"""Converts T5X predictions on SGD to DSTC8 official format for evaluation."""
 
 import collections
+import collections.abc
 import json
+import logging
 import os
+import pathlib
 import re
-from typing import Dict, Optional, Sequence, Union
 
-from absl import app
-from absl import flags
-from absl import logging
-from state_tracking.utils import sgd_utils
-import tensorflow as tf
+import attrs
+import tyro
+
+from gtod.state_tracking.utils import sgd_utils
+import gtod.util
 
 
-_T5X_PREDICTIONS_JSONL = flags.DEFINE_string(
-    "t5x_predictions_jsonl", None, "Input JSONL file with T5X model predictions."
+@attrs.frozen
+class ConvertSgdT5xSdtPredsToDstc8Config:
+    """SDT predictions conversion CLI configuration.
+
+    Attributes:
+        t5x_predictions_jsonl: Input JSONL file with T5X model predictions.
+        dstc8_data_dir: Directory for the downloaded DSTC8 data, which contains
+            the dialogue files and schema files of all datasets (train, dev, test)
+        output_dir: Output directory for JSON-format model predictions for official DSTC8
+            evaluation.
+        dataset_split: Dataset split for evaluation.
+        delimiter: Delimiter to separate slot/intent IDs from their descriptions or values.
+        evaluate_intent_acc: Whether to evaluate on active intent classification task.
+    """
+
+    t5x_predictions_jsonl: pathlib.Path
+    dstc8_data_dir: pathlib.Path
+    output_dir: pathlib.Path
+    dataset_split: gtod.util.DatasetSplit = attrs.field(
+        default=gtod.util.DatasetSplit.test
+    )
+    delimiter: str = attrs.field(default="=")
+    evaluate_intent_acc: bool = attrs.field(default=False)
+
+
+config = ConvertSgdT5xSdtPredsToDstc8Config(
+    pathlib.Path("."), pathlib.Path("."), pathlib.Path(".")
 )
-_DSTC8_DATA_DIR = flags.DEFINE_string(
-    "dstc8_data_dir",
-    None,
-    "Directory for the downloaded DSTC8 data, which contains "
-    "the dialogue files and schema files of all datasets (train, dev, test)",
-)
-_OUTPUT_DIR = flags.DEFINE_string(
-    "output_dir",
-    None,
-    "Output directory for JSON-format model predictions for official DSTC8 "
-    "evaluation.",
-)
-_DATASET_SPLIT = flags.DEFINE_enum(
-    "dataset_split", "test", ["train", "dev", "test"], "Dataset split for evaluation."
-)
-_DELIMITER = flags.DEFINE_string(
-    "delimiter",
-    "=",
-    "Delimiter to separate " "slot/intent IDs from their descriptions or " "values.",
-)
-_EVALUATE_INTENT_ACC = flags.DEFINE_bool(
-    "evaluate_intent_acc",
-    False,
-    "Whether to evaluate on active intent " "classification task.",
-)
+
 
 _SDT_CAT_SLOT_IDENTIFIER = "of possible values"
 
 
-def _create_categorical_slot_to_value_map(input_str: str) -> Dict[str, Dict[str, str]]:
+def _create_categorical_slot_to_value_map(input_str: str) -> dict[str, dict[str, str]]:
     """Creates mappings from letters to values for categorical slots."""
     slot_values = (
         input_str.split("[slots]")[1].split("[context]")[0].split("[intent]")[0].strip()
     )
     slot_to_option_to_value = collections.defaultdict(dict)
     for slot, value in re.findall(
-        rf"(\w+){_DELIMITER.value}(.*?)(?=\w+{_DELIMITER.value}|$)", slot_values
+        rf"(\w+){config.delimiter}(.*?)(?=\w+{config.delimiter}|$)", slot_values
     ):
         if _SDT_CAT_SLOT_IDENTIFIER not in value:
             continue
@@ -79,7 +82,7 @@ def _create_categorical_slot_to_value_map(input_str: str) -> Dict[str, Dict[str,
     return slot_to_option_to_value
 
 
-def _create_intent_map(input_str: str) -> Dict[str, str]:
+def _create_intent_map(input_str: str) -> dict[str, str]:
     """Creates mappings from letters to intent names."""
     intent_str = input_str.split("[intent]")[1].split("[context]")[0].strip()
     intent_option_to_value = {}
@@ -93,12 +96,12 @@ def _create_intent_map(input_str: str) -> Dict[str, str]:
 
 
 def _normalize_value_prediction(
-    slot_name: str, value: str, slot_to_option_to_value: Dict[str, Dict[str, str]]
-) -> Optional[str]:
+    slot_name: str, value: str, slot_to_option_to_value: dict[str, dict[str, str]]
+) -> str | None:
     """Normalizes a predicted value and maps a categorical option to value."""
     value = value.strip()
     if value == "none":
-        value = None
+        return None
 
     # Map decoded multiple choice letters back to actual value for cat slots.
     elif slot_name in slot_to_option_to_value:
@@ -118,8 +121,8 @@ def _normalize_value_prediction(
 
 
 def populate_json_predictions(
-    dialog_id_to_dialogue: Dict[str, sgd_utils.DialoguesDict],
-    frame_predictions: Dict[str, Union[str, Dict[str, str]]],
+    dialog_id_to_dialogue: dict[str, sgd_utils.DialoguesDict],
+    frame_predictions: dict[str, str | dict[str, str]],
 ) -> None:
     """Populates a dialogue JSON dictionary with frame-level T5X model outputs.
 
@@ -150,7 +153,7 @@ def populate_json_predictions(
     # Create a dict(slot -> dict(multiple-choice letter -> value)) for cat slots.
     slot_to_option_to_value = _create_categorical_slot_to_value_map(input_str)
 
-    if _EVALUATE_INTENT_ACC.value:
+    if config.evaluate_intent_acc:
         # Create a dict(multiple-choice letter -> intent) for intents.
         option_to_intent = _create_intent_map(input_str)
 
@@ -158,7 +161,7 @@ def populate_json_predictions(
     # TODO(harrisonlee): Support requested slots.
     slot_preds = preds.split("[state]")[1].split("[intent]")[0].strip()
     for slot_name, value in re.findall(
-        rf"(\w+){_DELIMITER.value}(.*?)(?=\w+{_DELIMITER.value}|$)", slot_preds
+        rf"(\w+){config.delimiter}(.*?)(?=\w+{config.delimiter}|$)", slot_preds
     ):
         value = _normalize_value_prediction(slot_name, value, slot_to_option_to_value)
 
@@ -166,23 +169,22 @@ def populate_json_predictions(
             frame["state"]["slot_values"][slot_name] = [value]
 
     # Populate intent prediction.
-    if _EVALUATE_INTENT_ACC.value and "[intent]" in preds:
+    if config.evaluate_intent_acc and "[intent]" in preds:
         # Read and populate intent prediction.
         intent_pred = preds.split("[intent]")[1].strip()
         frame["state"]["active_intent"] = option_to_intent.get(intent_pred, "NONE")
 
 
-def main(argv: Sequence[str]) -> None:
-    if len(argv) > 1:
-        raise app.UsageError("Too many command-line arguments.")
+def main() -> None:
+    assert config is not None
 
     # Load dialogues and flatten into dict(dialogue_id->dialogue).
     subdir_to_dialogues = {}
     sgd_utils.load_dialogues_to_dict(
-        _DSTC8_DATA_DIR.value, _DATASET_SPLIT.value, subdir_to_dialogues
+        config.dstc8_data_dir, config.dataset_split, subdir_to_dialogues
     )
     dialog_id_to_dialogue = {}
-    for dialogues in subdir_to_dialogues[_DATASET_SPLIT.value].values():
+    for dialogues in subdir_to_dialogues[config.dataset_split].values():
         for dialog in dialogues:
             dialog_id_to_dialogue[dialog["dialogue_id"]] = dialog
 
@@ -196,19 +198,16 @@ def main(argv: Sequence[str]) -> None:
                     frame["state"]["active_intent"] = "NONE"
 
     # Read JSONL predictions.
-    with tf.io.gfile.GFile(_T5X_PREDICTIONS_JSONL.value, "r") as predictions_file:
+    with config.t5x_predictions_jsonl.open("r") as predictions_file:
         for line in predictions_file:
             frame_predictions = json.loads(line)
             populate_json_predictions(dialog_id_to_dialogue, frame_predictions)
 
     # Write JSON predictions.
-    output_dir = _OUTPUT_DIR.value
-    if not tf.io.gfile.isdir(output_dir):
-        tf.io.gfile.makedirs(output_dir)
+    output_dir = config.output_dir
+    output_dir.mkdir(exist_ok=True, parents=True)
 
-    with tf.io.gfile.GFile(
-        os.path.join(output_dir, "dialogues_all.json"), "w"
-    ) as output_file:
+    with (output_dir / "dialogues_all.json").open("w") as output_file:
         json.dump(
             list(dialog_id_to_dialogue.values()),
             output_file,
@@ -218,7 +217,5 @@ def main(argv: Sequence[str]) -> None:
 
 
 if __name__ == "__main__":
-    flags.mark_flag_as_required("t5x_predictions_jsonl")
-    flags.mark_flag_as_required("dstc8_data_dir")
-    flags.mark_flag_as_required("output_dir")
-    app.run(main)
+    config = tyro.cli(ConvertSgdT5xSdtPredsToDstc8Config)
+    main()

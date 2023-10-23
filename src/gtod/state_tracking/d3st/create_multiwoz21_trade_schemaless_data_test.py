@@ -90,6 +90,7 @@ def test_item_name(schema_file, tmp_path):
     assert examples[1].dialog_id == "mul0708.json"
     assert examples[1].turn == 1
 
+
 def test_shuffled_item_name(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data(
         data_path=tmp_path, multiwoz_version="2.1", is_trade=True
@@ -137,6 +138,7 @@ def test_shuffled_item_name(schema_file, tmp_path):
     assert examples[1].dialog_id == "mul0708.json"
     assert examples[1].turn == 1
 
+
 def test_full_desc(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data(
         data_path=tmp_path, multiwoz_version="2.1", is_trade=True
@@ -179,6 +181,7 @@ def test_full_desc(schema_file, tmp_path):
     assert examples[1].tgt == "[states] 2:cambridge 28:leicester [intents] [req_slots]"
     assert examples[1].dialog_id == "mul0708.json"
     assert examples[1].turn == 1
+
 
 def test_full_desc_with_domain(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data(
@@ -227,6 +230,7 @@ def test_full_desc_with_domain(schema_file, tmp_path):
     assert examples[1].dialog_id == "mul0708.json"
     assert examples[1].turn == 1
 
+
 def test_delimiter(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data(
         data_path=tmp_path, multiwoz_version="2.1", is_trade=True
@@ -270,6 +274,7 @@ def test_delimiter(schema_file, tmp_path):
     assert examples[1].dialog_id == "mul0708.json"
     assert examples[1].turn == 1
 
+
 def test_multiple_choice_a(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data(
         data_path=tmp_path, multiwoz_version="2.1", is_trade=True
@@ -277,14 +282,10 @@ def test_multiple_choice_a(schema_file, tmp_path):
     schema_info = multiwoz_utils.load_schema(schema_file)
 
     # The testdata example doesn't have any categorical slots, so mock some.
-    schema_info.slots_by_domain["train"][
-        "train-departure"
-    ] = multiwoz_utils.SlotInfo(
+    schema_info.slots_by_domain["train"]["train-departure"] = multiwoz_utils.SlotInfo(
         is_categorical=True, possible_values=["leicester", "cambridge"]
     )
-    schema_info.slots_by_domain["train"][
-        "train-destination"
-    ] = multiwoz_utils.SlotInfo(
+    schema_info.slots_by_domain["train"]["train-destination"] = multiwoz_utils.SlotInfo(
         is_categorical=True, possible_values=["leicester", "cambridge"]
     )
 
@@ -315,6 +316,7 @@ def test_multiple_choice_a(schema_file, tmp_path):
     assert examples[1].dialog_id == "mul0708.json"
     assert examples[1].turn == 1
 
+
 def test_multiple_choice_1a(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data(
         data_path=tmp_path, multiwoz_version="2.1", is_trade=True
@@ -322,14 +324,10 @@ def test_multiple_choice_1a(schema_file, tmp_path):
     schema_info = multiwoz_utils.load_schema(schema_file)
 
     # The testdata example doesn't have any categorical slots, so mock some.
-    schema_info.slots_by_domain["train"][
-        "train-departure"
-    ] = multiwoz_utils.SlotInfo(
+    schema_info.slots_by_domain["train"]["train-departure"] = multiwoz_utils.SlotInfo(
         is_categorical=True, possible_values=["leicester", "cambridge"]
     )
-    schema_info.slots_by_domain["train"][
-        "train-destination"
-    ] = multiwoz_utils.SlotInfo(
+    schema_info.slots_by_domain["train"]["train-destination"] = multiwoz_utils.SlotInfo(
         is_categorical=True, possible_values=["leicester", "cambridge"]
     )
 
@@ -360,6 +358,7 @@ def test_multiple_choice_1a(schema_file, tmp_path):
     assert examples[1].dialog_id == "mul0708.json"
     assert examples[1].turn == 1
 
+
 def test_blocked_one_domain(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data(
         data_path=tmp_path, multiwoz_version="2.1", is_trade=True
@@ -367,14 +366,10 @@ def test_blocked_one_domain(schema_file, tmp_path):
     schema_info = multiwoz_utils.load_schema(schema_file)
 
     # The testdata example doesn't have any categorical slots, so mock some.
-    schema_info.slots_by_domain["train"][
-        "train-departure"
-    ] = multiwoz_utils.SlotInfo(
+    schema_info.slots_by_domain["train"]["train-departure"] = multiwoz_utils.SlotInfo(
         is_categorical=True, possible_values=["leicester", "cambridge"]
     )
-    schema_info.slots_by_domain["train"][
-        "train-destination"
-    ] = multiwoz_utils.SlotInfo(
+    schema_info.slots_by_domain["train"]["train-destination"] = multiwoz_utils.SlotInfo(
         is_categorical=True, possible_values=["leicester", "cambridge"]
     )
 
@@ -420,6 +415,7 @@ def test_blocked_one_domain(schema_file, tmp_path):
     assert examples[1].dialog_id == "mul0708.json"
     assert examples[1].turn == 1
 
+
 def test_blocked_many_domains(schema_file, tmp_path):
     multiwoz_data = multiwoz_utils.load_data(
         data_path=tmp_path, multiwoz_version="2.1", is_trade=True
@@ -427,14 +423,10 @@ def test_blocked_many_domains(schema_file, tmp_path):
     schema_info = multiwoz_utils.load_schema(schema_file)
 
     # The testdata example doesn't have any categorical slots, so mock some.
-    schema_info.slots_by_domain["train"][
-        "train-departure"
-    ] = multiwoz_utils.SlotInfo(
+    schema_info.slots_by_domain["train"]["train-departure"] = multiwoz_utils.SlotInfo(
         is_categorical=True, possible_values=["leicester", "cambridge"]
     )
-    schema_info.slots_by_domain["train"][
-        "train-destination"
-    ] = multiwoz_utils.SlotInfo(
+    schema_info.slots_by_domain["train"]["train-destination"] = multiwoz_utils.SlotInfo(
         is_categorical=True, possible_values=["leicester", "cambridge"]
     )
 
