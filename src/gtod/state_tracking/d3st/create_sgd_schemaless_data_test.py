@@ -43,7 +43,7 @@ def config_saver(*args, **kwargs):
         ("dst", "full_desc"),
         ("dst_intent", "full_desc"),
     ],
-    ids=["create_sgd_schemaless_dst"],  # , "create_sgd_schemaless_dst_intent"],
+    ids=["create_sgd_schemaless_dst", "create_sgd_schemaless_dst_intent"],
 )
 def test_generate_data_full_desc(
     level, data_format, tmp_path: pathlib.Path, testdata_dir: pathlib.Path
