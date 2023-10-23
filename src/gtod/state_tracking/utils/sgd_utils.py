@@ -19,7 +19,6 @@ import collections.abc
 import copy
 import json
 import logging
-import os
 import pathlib
 import re
 import typing as tp
@@ -48,7 +47,7 @@ def load_dialogues_to_dict(
         output_dict[subdir] = {}
     dialogue_files = (data_dir / subdir).glob("dialogues*.json")
     for dialogue_file in dialogue_files:
-        dialogue_filename = os.path.basename(dialogue_file)
+        dialogue_filename = dialogue_file.name
         with dialogue_file.open() as f:
             output_dict[subdir][dialogue_filename] = json.load(f)
 
