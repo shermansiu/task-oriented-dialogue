@@ -46,8 +46,8 @@ def schema_file(tmp_path, testdata_dir):
     )
 
     # Touch empty files for (val|test)ListFile.json
-    (tmp_path / "dev_dials.json").touch()
-    (tmp_path / "test_dials.json").touch()
+    (tmp_path / "dev_dials.json").write_text("[]")
+    (tmp_path / "test_dials.json").write_text("[]")
 
     return schema_file_
 
