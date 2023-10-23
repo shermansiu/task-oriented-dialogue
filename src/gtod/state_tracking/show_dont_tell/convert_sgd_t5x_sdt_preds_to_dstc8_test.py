@@ -57,6 +57,15 @@ def dummy_config():
         pathlib.Path("."),
         pathlib.Path("."),
         pathlib.Path("."),
+    )
+
+
+@pytest.fixture
+def dummy_intent_config():
+    return convert_sgd_t5x_sdt_preds_to_dstc8.CliConfig(
+        pathlib.Path("."),
+        pathlib.Path("."),
+        pathlib.Path("."),
         evaluate_intent_acc=True,
     )
 
@@ -127,7 +136,7 @@ def test_populate_json_slot_predictions(dummy_config):
     assert actual_dialogue_slots == expected_dialogue_slots
 
 
-def test_populate_json_intent_predictions(dummy_config):
+def test_populate_json_intent_predictions(dummy_intent_config):
     frame_predictions = {
         "input": {
             "inputs_pretokenized": "[example] [user] how about finding a place march 3rd? "
