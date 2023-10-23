@@ -14,15 +14,14 @@
 
 """Tests for create_multiwoz21_trade_schemaless_data."""
 
-import os
 import random
 import shutil
 import sys
 
-import attrs
 import pytest
 
 from gtod.state_tracking.d3st import create_multiwoz21_trade_schemaless_data
+from gtod.state_tracking.d3st import common
 from gtod.state_tracking.utils import multiwoz_utils
 
 TEST_DIR = "zero_shot_task_oriented_dialog/testdata"
@@ -63,9 +62,9 @@ def test_item_name(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz21_trade_schemaless_data.Options(
-            description_type="item_name",
+            description_type=common.DescriptionType("item_name"),
             delimiter=":",
-            multiple_choice="none",
+            multiple_choice=common.MultipleChoiceFormat("none"),
             use_active_domains_only=False,
             blocked_domains=set(),
         ),
@@ -101,9 +100,9 @@ def test_shuffled_item_name(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz21_trade_schemaless_data.Options(
-            description_type="shuffled_item_name",
+            description_type=common.DescriptionType("shuffled_item_name"),
             delimiter=":",
-            multiple_choice="1a",
+            multiple_choice=common.MultipleChoiceFormat.one_a,
             use_active_domains_only=False,
             blocked_domains=set(),
         ),
@@ -149,9 +148,9 @@ def test_full_desc(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz21_trade_schemaless_data.Options(
-            description_type="full_desc",
+            description_type=common.DescriptionType("full_desc"),
             delimiter=":",
-            multiple_choice="none",
+            multiple_choice=common.MultipleChoiceFormat("none"),
             use_active_domains_only=False,
             blocked_domains=set(),
         ),
@@ -193,9 +192,9 @@ def test_full_desc_with_domain(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz21_trade_schemaless_data.Options(
-            description_type="full_desc_with_domain",
+            description_type=common.DescriptionType("full_desc_with_domain"),
             delimiter=":",
-            multiple_choice="none",
+            multiple_choice=common.MultipleChoiceFormat("none"),
             use_active_domains_only=False,
             blocked_domains=set(),
         ),
@@ -241,9 +240,9 @@ def test_delimiter(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz21_trade_schemaless_data.Options(
-            description_type="full_desc",
+            description_type=common.DescriptionType("full_desc"),
             delimiter="=",
-            multiple_choice="none",
+            multiple_choice=common.MultipleChoiceFormat("none"),
             use_active_domains_only=False,
             blocked_domains=set(),
         ),
@@ -294,9 +293,9 @@ def test_multiple_choice_a(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz21_trade_schemaless_data.Options(
-            description_type="full_desc",
+            description_type=common.DescriptionType("full_desc"),
             delimiter=":",
-            multiple_choice="a",
+            multiple_choice=common.MultipleChoiceFormat("a"),
             use_active_domains_only=True,
             blocked_domains=set(),
         ),
@@ -336,7 +335,7 @@ def test_multiple_choice_1a(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz21_trade_schemaless_data.Options(
-            description_type="full_desc",
+            description_type=common.DescriptionType("full_desc"),
             delimiter=":",
             multiple_choice="1a",
             use_active_domains_only=True,
@@ -378,9 +377,9 @@ def test_blocked_one_domain(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz21_trade_schemaless_data.Options(
-            description_type="full_desc_with_domain",
+            description_type=common.DescriptionType("full_desc_with_domain"),
             delimiter=":",
-            multiple_choice="none",
+            multiple_choice=common.MultipleChoiceFormat("none"),
             use_active_domains_only=False,
             blocked_domains=set(["hotel"]),
         ),
@@ -435,9 +434,9 @@ def test_blocked_many_domains(schema_file, tmp_path):
         schema_info,
         multiwoz_data.slot_descriptions,
         create_multiwoz21_trade_schemaless_data.Options(
-            description_type="full_desc_with_domain",
+            description_type=common.DescriptionType("full_desc_with_domain"),
             delimiter=":",
-            multiple_choice="none",
+            multiple_choice=common.MultipleChoiceFormat("none"),
             use_active_domains_only=False,
             blocked_domains=set(["hotel", "train"]),
         ),
