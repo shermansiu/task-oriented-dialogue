@@ -109,7 +109,7 @@ class CliConfig:
     input_dir: pathlib.Path
     output_path: pathlib.Path
     sgdx_dir: pathlib.Path | None = attrs.field(default=None)
-    subdirs: str = attrs.field(default="train,dev,test")
+    subdirs: list[str] = attrs.field(factory=lambda: ["train", "dev", "test"])
     prompt_format: common.PromptFormat = attrs.field(
         default=common.PromptFormat.separated
     )
@@ -129,10 +129,6 @@ class CliConfig:
     data_percent: float = attrs.field(default=0.0)
     k_shot: int = attrs.field(default=0)
     use_intent_slot_descs: bool = attrs.field(default=False)
-
-    @functools.cached_property
-    def subdirectories(self):
-        return tuple(self.subdirs.split(","))
 
     @functools.cached_property
     def as_options(self) -> Options:
@@ -206,7 +202,7 @@ def build_example(
 def create_examples_from_dialogue(
     dialogue: collections.abc.Mapping[str, tp.Any],
     service_to_prompts: dict[str, list[Prompt]] | None,
-    service_to_schema: collections.abc.Mapping[str, sgd_utils.Schema],
+    service_to_schema: collections.abc.Mapping[str, sgd_utils.Schema] | tp.Literal[False],
     options: Options,
 ) -> list[Example]:
     """Returns example strings created from a dialogue.
@@ -297,7 +293,7 @@ def main(config: CliConfig) -> None:
     # Load dataset - SGD-X if provided, otherwise SGD
     sgd_data_dir = options.sgdx_dir or options.sgd_dir
     subdir_to_schema, subdir_to_dialogues = sgd_utils.load_dataset(
-        data_dir=sgd_data_dir, subdirs=config.subdirectories
+        data_dir=sgd_data_dir, subdirs=config.subdirs
     )
 
     # If enabled, create map from service to schema for adding D3ST descriptions

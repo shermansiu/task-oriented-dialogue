@@ -46,7 +46,7 @@ def generate_prompt_str(
     randomize_cat_vals: bool = True,
     randomize_intents: bool = True,
     use_slot_ids: bool = False,
-    key_to_schema: Mapping[str, sgd_utils.Schema] | None = None,
+    key_to_schema: Mapping[str, sgd_utils.Schema] | tp.Literal[False] | None = None,
 ) -> tuple[
     str,
     list[str],
