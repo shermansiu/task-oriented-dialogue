@@ -14,30 +14,16 @@
 
 """Tests for convert_sgd_t5x_sdt_preds_to_dstc8."""
 
-import contextlib
 import copy
 import json
-import os
+import pathlib
+import sys
 
 import pytest
 
+from gtod.state_tracking.show_dont_tell import common
 from gtod.state_tracking.show_dont_tell import convert_sgd_t5x_sdt_preds_to_dstc8
 
-
-Config = convert_sgd_t5x_sdt_preds_to_dstc8.ConvertSgdT5xSdtPredsToDstc8Config
-
-
-@contextlib.contextmanager
-def config_saver(*args, **kwargs):
-    old_config = convert_sgd_t5x_sdt_preds_to_dstc8.config
-    try:
-        convert_sgd_t5x_sdt_preds_to_dstc8.config = Config(*args, **kwargs)
-        yield
-    finally:
-        convert_sgd_t5x_sdt_preds_to_dstc8.config = old_config
-
-
-TEST_DIR = "task-oriented-dialog/testdata"
 
 DIALOG_ID_TO_DIALOGUE = {
     "1_00000": {
@@ -65,21 +51,25 @@ DIALOG_ID_TO_DIALOGUE = {
 }
 
 
-def test_convert_data(self):
-    self._temp_dir = self.create_tempdir()
-    self._testdata_dir = os.path.join(FLAGS.test_srcdir, TEST_DIR)
+@pytest.fixture
+def dummy_config():
+    return convert_sgd_t5x_sdt_preds_to_dstc8.CliConfig(
+        pathlib.Path("."), pathlib.Path("."), pathlib.Path(".")
+    )
 
-    with flagsaver.flagsaver(
-        t5x_predictions_jsonl=os.path.join(
-            self._testdata_dir, "show_dont_tell", "sgd_t5x_prediction.jsonl"
-        ),
-        dstc8_data_dir=os.path.join(self._testdata_dir, "sgd_data"),
-        output_dir=self._temp_dir,
-        dataset_split="dev",
-    ):
-        convert_sgd_t5x_sdt_preds_to_dstc8.main([])
 
-    with tf.io.gfile.GFile(os.path.join(self._temp_dir, "dialogues_all.json")) as f:
+def test_convert_data(tmp_path, testdata_dir):
+    config = convert_sgd_t5x_sdt_preds_to_dstc8.CliConfig(
+        t5x_predictions_jsonl=testdata_dir
+        / "show_dont_tell"
+        / "sgd_t5x_prediction.jsonl",
+        dstc8_data_dir=testdata_dir / "sgd_data",
+        output_dir=tmp_path,
+        dataset_split=common.DatasetSplit.dev,
+    )
+    convert_sgd_t5x_sdt_preds_to_dstc8.main(config)
+
+    with (tmp_path / "dialogues_all.json").open() as f:
         dialogues = json.load(f)
     actual_dialogue_slots = dialogues[0]["turns"][0]["frames"][0]["state"][
         "slot_values"
@@ -89,10 +79,10 @@ def test_convert_data(self):
         "time": ["half past 11 in the morning"],
     }
 
-    self.assertDictEqual(actual_dialogue_slots, expected_dialogue_slots)
+    assert actual_dialogue_slots == expected_dialogue_slots
 
 
-def test_populate_json_slot_predictions(self):
+def test_populate_json_slot_predictions(dummy_config):
     frame_predictions = {
         "input": {
             "inputs_pretokenized": "[example] [user] how about finding a place march 3rd? "
@@ -122,7 +112,7 @@ def test_populate_json_slot_predictions(self):
     }
     dialog_id_to_dialogue = copy.deepcopy(DIALOG_ID_TO_DIALOGUE)
     convert_sgd_t5x_sdt_preds_to_dstc8.populate_json_predictions(
-        dialog_id_to_dialogue, frame_predictions
+        dummy_config, dialog_id_to_dialogue, frame_predictions
     )
     actual_dialogue_slots = dialog_id_to_dialogue["1_00000"]["turns"][0]["frames"][0][
         "state"
@@ -131,10 +121,10 @@ def test_populate_json_slot_predictions(self):
         "has_vegetarian_options": ["true"],
         "date": ["the 8th"],
     }
-    self.assertDictEqual(actual_dialogue_slots, expected_dialogue_slots)
+    assert actual_dialogue_slots == expected_dialogue_slots
 
 
-def test_populate_json_intent_predictions(self):
+def test_populate_json_intent_predictions(dummy_config):
     frame_predictions = {
         "input": {
             "inputs_pretokenized": "[example] [user] how about finding a place march 3rd? "
@@ -158,15 +148,15 @@ def test_populate_json_intent_predictions(self):
     }
     dialog_id_to_dialogue = copy.deepcopy(DIALOG_ID_TO_DIALOGUE)
     convert_sgd_t5x_sdt_preds_to_dstc8.populate_json_predictions(
-        dialog_id_to_dialogue, frame_predictions
+        dummy_config, dialog_id_to_dialogue, frame_predictions
     )
 
     actual_intent = dialog_id_to_dialogue["1_00000"]["turns"][0]["frames"][0]["state"][
         "active_intent"
     ]
     expected_intent = "ReserveRestaurant"
-    self.assertEqual(actual_intent.lower(), expected_intent.lower())
+    assert actual_intent.lower() == expected_intent.lower()
 
 
 if __name__ == "__main__":
-    tf.test.main()
+    sys.exit(pytest.main(["-qq"]))
