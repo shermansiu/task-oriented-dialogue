@@ -69,7 +69,9 @@ class FramePredictions:
 _SDT_CAT_SLOT_IDENTIFIER = "of possible values"
 
 
-def _create_categorical_slot_to_value_map(input_str: str) -> dict[str, dict[str, str]]:
+def _create_categorical_slot_to_value_map(
+    config: CliConfig, input_str: str
+) -> dict[str, dict[str, str]]:
     """Creates mappings from letters to values for categorical slots."""
     slot_values = (
         input_str.split("[slots]")[1].split("[context]")[0].split("[intent]")[0].strip()
@@ -160,7 +162,7 @@ def populate_json_predictions(
     input_str = f_preds.input.inputs_pretokenized
 
     # Create a dict(slot -> dict(multiple-choice letter -> value)) for cat slots.
-    slot_to_option_to_value = _create_categorical_slot_to_value_map(input_str)
+    slot_to_option_to_value = _create_categorical_slot_to_value_map(config, input_str)
 
     if config.evaluate_intent_acc:
         # Create a dict(multiple-choice letter -> intent) for intents.
