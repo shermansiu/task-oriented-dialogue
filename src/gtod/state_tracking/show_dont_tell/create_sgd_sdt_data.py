@@ -304,7 +304,7 @@ def main() -> None:
     )
 
     # If enabled, create map from service to schema for adding D3ST descriptions
-    if config.use_intent_slot_descs.value:
+    if config.use_intent_slot_descs:
         service_to_schema = sgd_utils.dedupe_and_unnest_schemas(subdir_to_schema)
     else:
         service_to_schema = False
@@ -339,11 +339,11 @@ def main() -> None:
                     )
 
         # Optionally sample a proportion of examples only
-        if config.data_percent.value > 0.0:
+        if config.data_percent > 0.0:
             examples = random.sample(
-                examples, int(config.data_percent.value * len(examples))
+                examples, int(config.data_percent * len(examples))
             )
-        elif config.k_shot.value > 0:
+        elif config.k_shot > 0:
             # A dict of service to a list of examples belonging to that service.
             service_to_examples = collections.defaultdict(list)
             for example in examples:
