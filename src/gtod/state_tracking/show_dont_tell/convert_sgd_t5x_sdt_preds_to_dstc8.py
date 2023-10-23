@@ -171,8 +171,6 @@ def populate_json_predictions(
 
 
 def main(config: CliConfig) -> None:
-    assert config is not None
-
     # Load dialogues and flatten into dict(dialogue_id->dialogue).
     subdir_to_dialogues = {}
     sgd_utils.load_dialogues_to_dict(
