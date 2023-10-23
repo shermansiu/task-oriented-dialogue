@@ -15,6 +15,7 @@
 """Utils for processing schema-guided dialogue data."""
 
 import collections
+import collections.abc
 import copy
 import json
 import logging
@@ -55,7 +56,7 @@ def load_dialogues_to_dict(
 
 
 def load_dataset(
-    data_dir: pathlib.Path, subdirs: list[str]
+    data_dir: pathlib.Path, subdirs: collections.abc.Sequence[str]
 ) -> tuple[dict[str, Schemas], dict[str, DialoguesDict]]:
     """Loads schemas and dialogues into dicts keyed by subdir."""
     subdir_to_schema = {}
