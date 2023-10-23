@@ -18,15 +18,14 @@ import collections
 import collections.abc
 import json
 import logging
-import os
 import pathlib
 import re
 
 import attrs
 import tyro
 
+from gtod.state_tracking.show_dont_tell import common
 from gtod.state_tracking.utils import sgd_utils
-import gtod.util
 
 
 @attrs.frozen
@@ -47,8 +46,8 @@ class CliConfig:
     t5x_predictions_jsonl: pathlib.Path
     dstc8_data_dir: pathlib.Path
     output_dir: pathlib.Path
-    dataset_split: gtod.util.DatasetSplit = attrs.field(
-        default=gtod.util.DatasetSplit.test
+    dataset_split: common.DatasetSplit = attrs.field(
+        default=common.DatasetSplit.test
     )
     delimiter: str = attrs.field(default="=")
     evaluate_intent_acc: bool = attrs.field(default=False)

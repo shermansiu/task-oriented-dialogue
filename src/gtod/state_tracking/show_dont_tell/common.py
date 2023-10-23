@@ -26,3 +26,9 @@ class TargetFormat(gtod.util.AutoNameEnum):
 
     all = enum.auto()
     active = enum.auto()
+
+
+class DatasetSplit(gtod.util.AutoNameEnum):
+    train = enum.auto()
+    dev = enum.auto()
+    test = enum.auto()
