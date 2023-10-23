@@ -75,7 +75,7 @@ class Options:
     randomize_cat_vals: bool
     randomize_intents: bool
     use_slot_ids: bool
-    prompt_indices: list[int]
+    prompt_indices: list[int] | None
 
 
 @attrs.frozen
