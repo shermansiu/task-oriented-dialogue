@@ -14,14 +14,10 @@
 
 """Tests for create_sgd_sdt_data."""
 
-import contextlib
 import sys
 import pytest
-import gtod.util
+from gtod.state_tracking.show_dont_tell import common
 from gtod.state_tracking.show_dont_tell import create_sgd_sdt_data
-
-
-config_saver = gtod.util.config_saver_factory(create_sgd_sdt_data)
 
 
 @pytest.mark.parametrize(
@@ -91,13 +87,13 @@ def test_generate_data(
     temp_output = tmp_path / "output"
     ref_output = testdata_dir / "show_dont_tell" / ref_output_filename
 
-    with config_saver(
+    config = create_sgd_sdt_data.CliConfig(
         input_dir=testdata_dir / "sgd_data",
         output_path=temp_output,
         subdirs=["train"],
-        prompt_format="separated",
+        prompt_format=common.PromptFormat.separated,
         prompt_indices=[0],
-        context_format="dialogue",
+        context_format=common.ContextFormat.dialogue,
         target_format=target_format,
         add_intents=False,
         use_slot_ids=use_slot_ids,
@@ -107,8 +103,8 @@ def test_generate_data(
         mcq_intents=False,
         randomize_cat_vals=False,
         use_intent_slot_descs=use_intent_slot_descs,
-    ):
-        create_sgd_sdt_data.main()
+    )
+    create_sgd_sdt_data.main(config)
 
     with temp_output.open() as temp_f, ref_output.open() as ref_f:
         assert temp_f.readlines() == ref_f.readlines()
@@ -120,15 +116,15 @@ def test_generate_sgdx_data(tmp_path, testdata_dir):
         testdata_dir / "show_dont_tell" / "sgd_text_sdt_separated_dialogue_all_sgdx"
     )
 
-    with config_saver(
+    config = create_sgd_sdt_data.CliConfig(
         input_dir=testdata_dir / "sgd_data",
         output_path=temp_output,
         sgdx_dir=testdata_dir / "sgdx_data",
         subdirs=["train"],
-        prompt_format="separated",
+        prompt_format=common.PromptFormat.separated,
         prompt_indices=[0],
-        context_format="dialogue",
-        target_format="all",
+        context_format=common.ContextFormat.dialogue,
+        target_format=common.TargetFormat.all,
         add_intents=False,
         use_slot_ids=False,
         randomize_slots=False,
@@ -136,8 +132,8 @@ def test_generate_sgdx_data(tmp_path, testdata_dir):
         mcq_cat_vals=False,
         mcq_intents=False,
         randomize_cat_vals=False,
-    ):
-        create_sgd_sdt_data.main()
+    )
+    create_sgd_sdt_data.main(config)
 
     with temp_output.open() as temp_f, ref_output.open() as ref_f:
         assert temp_f.readlines() == ref_f.readlines()
@@ -166,14 +162,14 @@ def test_generate_intent(
     temp_output = tmp_path / "output"
     ref_output = testdata_dir / "show_dont_tell" / ref_output_filename
 
-    with config_saver(
+    config = create_sgd_sdt_data.CliConfig(
         input_dir=testdata_dir / "sgd_data",
         output_path=temp_output,
         subdirs=["train"],
-        prompt_format="separated",
+        prompt_format=common.PromptFormat.separated,
         prompt_indices=[0],
-        context_format="dialogue",
-        target_format="all",
+        context_format=common.ContextFormat.dialogue,
+        target_format=common.TargetFormat.all,
         add_intents=True,
         use_slot_ids=False,
         randomize_slots=False,
@@ -181,8 +177,8 @@ def test_generate_intent(
         mcq_cat_vals=False,
         mcq_intents=mcq_intents,
         randomize_cat_vals=False,
-    ):
-        create_sgd_sdt_data.main()
+    )
+    create_sgd_sdt_data.main(config)
 
     with temp_output.open() as temp_f, ref_output.open() as ref_f:
         self.assertEqual(temp_f.readlines(), ref_f.readlines())
