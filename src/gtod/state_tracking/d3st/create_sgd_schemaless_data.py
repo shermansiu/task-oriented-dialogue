@@ -139,6 +139,14 @@ class SchemaInfo:
     intents_rand_name: dict[str, str] = attrs.field(factory=dict)
 
 
+@attrs.define
+class FrameState:
+    slot_desc: list[str] = attrs.field(factory=list)
+    intent_desc: list[str] = attrs.field(factory=list)
+    intent_ids: list[str] = attrs.field(factory=list)
+    req_slots: list[str] = attrs.field(factory=list)
+
+
 def load_schema() -> tuple[collections.OrderedDict, SchemaInfo]:
     """Loads schema items and descriptions.
 
@@ -221,7 +229,7 @@ def _process_user_turn(
     cumu_slots: collections.OrderedDict,
     domain: str,
     item_desc: SchemaInfo,
-    state_dict: dict[str, list[str]],
+    state_dict: FrameState,
 ) -> dict[str, int]:
     """Updates turn_info and cumu_slots based on user turn input.
 
@@ -257,7 +265,7 @@ def _process_user_turn(
         random.shuffle(slots)
     # In multi-domain turn case, desc_prefix already contains desc from the
     # previous domain.
-    slot_id = len(state_dict["slot_desc"])
+    slot_id = len(state_dict.slot_desc)
     for slot in slots:
         if config.data_format == DataFormatEnum.full_desc:
             desc = item_desc.slots[slot]
@@ -292,7 +300,7 @@ def _process_user_turn(
             # Description prefix to be included in each turn.
             t = f" {slot_id}{config.delimiter}"
             desc_to_slot_id[slot] = slot_id
-            state_dict["slot_desc"].append(
+            state_dict.slot_desc.append(
                 t + desc.lower() + " " if config.lowercase else t + desc + " "
             )
 
@@ -323,7 +331,7 @@ def _process_user_turn(
     intents = list(item_desc.intents.keys())
     if config.randomize_items:
         random.shuffle(intents)
-    intent_id = len(state_dict["intent_desc"])
+    intent_id = len(state_dict.intent_desc)
     for intent in intents:
         if config.data_format == DataFormatEnum.full_desc:
             desc = item_desc.intents[intent]
@@ -343,11 +351,11 @@ def _process_user_turn(
             if active_intent == intent:
                 intent_str = " " + t[:-1]
 
-            state_dict["intent_desc"].append(
+            state_dict.intent_desc.append(
                 t + desc.lower() + " " if config.lowercase else t + desc + " "
             )
             if intent_str:
-                state_dict["intent_ids"].append(intent_str)
+                state_dict.intent_ids.append(intent_str)
             intent_id += 1
 
     # Handle requested slots.
@@ -446,12 +454,7 @@ def process_turn(
     for frame_id, frames in enumerate(turn["frames"]):
         domain = frames["service"]
         turn_info.frame_id = str(frame_id)
-        state_dict = {
-            "slot_desc": [],
-            "intent_desc": [],
-            "intent_ids": [],
-            "req_slots": [],
-        }
+        state_dict = FrameState()
 
         if user_turn:
             # Multi-service turns are possible, each frame corresponds to one
@@ -468,15 +471,15 @@ def process_turn(
 
         # Add item description prefixes and states to outputs (coming from user
         # turns).
-        user_turn_prefix = "".join(state_dict["slot_desc"] + state_dict["intent_desc"])
+        user_turn_prefix = "".join(state_dict.slot_desc + state_dict.intent_desc)
         if user_turn:
             turn_info.out_ctx_with_desc_str = user_turn_prefix + turn_info.out_ctx_str
         else:
             # Prefix from the previous user turn.
             turn_info.out_ctx_with_desc_str = prefix + turn_info.out_ctx_str
-        turn_info.out_intent_str += "".join(state_dict["intent_ids"])
+        turn_info.out_intent_str += "".join(state_dict.intent_ids)
         turn_info.out_intent_str += " [req_slots] "
-        turn_info.out_intent_str += " ".join(state_dict["req_slots"])
+        turn_info.out_intent_str += " ".join(state_dict.req_slots)
         turn_info_per_frame.append(turn_info)
 
     return user_turn_prefix, turn_info_per_frame
