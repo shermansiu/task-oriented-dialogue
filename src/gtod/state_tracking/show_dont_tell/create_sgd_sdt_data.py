@@ -23,7 +23,6 @@ Example: [example] [user] can you find me a bus to lax? ... \
 
 import collections
 import collections.abc
-import functools
 import itertools
 import logging
 import pathlib
@@ -127,7 +126,7 @@ class CliConfig:
     k_shot: int = attrs.field(default=0)
     use_intent_slot_descs: bool = attrs.field(default=False)
 
-    @functools.cached_property
+    @property
     def as_options(self) -> Options:
         return Options(
             sgd_dir=self.input_dir,
