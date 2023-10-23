@@ -26,6 +26,7 @@ This is version 2, which generates the schemaless data format:
 import collections
 import copy
 import enum
+import io
 import json
 import pathlib
 import random
@@ -265,7 +266,7 @@ def _process_user_turn(
             raise ValueError(f"Invalid data format {config.data_format}")
 
         # If we are generating with multiple choice, append this prompt.
-        if config.multiple_choice != "none" and item_desc["is_categorical"][slot]:
+        if config.multiple_choice != MultipleChoiceFormat.none and item_desc["is_categorical"][slot]:
             possible_values = item_desc["possible_values"][slot]
             if config.randomize_items:
                 random.shuffle(possible_values)
@@ -324,6 +325,8 @@ def _process_user_turn(
             desc = intent
         elif config.data_format == DataFormatEnum.rand_name:
             desc = item_desc["intents_rand_name"][intent]
+        else:
+            raise ValueError(f"Invalid data format {config.data_format}")
 
         # Only consider slots in the utterance domain.
         if domain in intent:
@@ -400,7 +403,7 @@ def process_turn(
     item_desc: SchemaInfo,
     prefix: str,
     turn_id: int,
-) -> str:
+) -> tuple[str, list[TurnInfo]]:
     """Collects information from a single turn.
 
     Args:
@@ -431,6 +434,7 @@ def process_turn(
         turn_info.out_state_str = "[states]"
         turn_info.out_intent_str = "[intents]"
 
+    user_turn_prefix = ""
     desc_to_slot_id = {}
     turn_info_per_frame = []
     for frame_id, frames in enumerate(turn["frames"]):
@@ -472,7 +476,7 @@ def process_turn(
     return user_turn_prefix, turn_info_per_frame
 
 
-def write_examples(turn_list: list[TurnInfo], out_file: pathlib.Path) -> None:
+def write_examples(turn_list: list[TurnInfo], out_file: io.TextIOWrapper) -> None:
     """Format output example strings and write to file.
 
     Args:
