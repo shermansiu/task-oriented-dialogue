@@ -24,55 +24,55 @@ from gtod.state_tracking.show_dont_tell import create_sgd_sdt_data
     "target_format, use_slot_ids, mcq_cat_vals, use_intent_slot_descs, ref_output_filename",
     [
         (
-            "all_slots_slot_names",
             "all",
             False,
             False,
             False,
+            "sgd_text_sdt_separated_dialogue_all",
         ),
         (
-            "active_slots_slot_names",
             "active",
             False,
             False,
             False,
+            "sgd_text_sdt_separated_dialogue_active",
         ),
-        (
-            "all_slots_slot_ids",
+        (   
             "all",
             True,
             False,
             False,
+            "sgd_text_sdt_separated_dialogue_all_slot_ids",
         ),
         (
-            "all_slots_cat_val_mcq",
             "all",
             False,
             True,
             False,
+            "sgd_text_sdt_separated_dialogue_all_cat_val_mcq",
         ),
         (
-            "all_slots_d3st_mcq",
             "all",
             False,
             True,
             True,
+            "sgd_text_sdt_separated_dialogue_all_mcq_d3st",
         ),
         (
-            "all_slots_slot_ids_d3st_mcq",
             "all",
             True,
             True,
             True,
+            "sgd_text_sdt_separated_dialogue_all_slot_ids_mcq_d3st",
         ),
     ],
     ids=[
-        "sgd_text_sdt_separated_dialogue_all",
-        "sgd_text_sdt_separated_dialogue_active",
-        "sgd_text_sdt_separated_dialogue_all_slot_ids",
-        "sgd_text_sdt_separated_dialogue_all_cat_val_mcq",
-        "sgd_text_sdt_separated_dialogue_all_mcq_d3st",
-        "sgd_text_sdt_separated_dialogue_all_slot_ids_mcq_d3st",
+        "all_slots_slot_names",
+        "active_slots_slot_names",
+        "all_slots_slot_ids",
+        "all_slots_cat_val_mcq",
+        "all_slots_d3st_mcq",
+        "all_slots_slot_ids_d3st_mcq",
     ],
 )
 def test_generate_data(
@@ -143,21 +143,21 @@ def test_generate_sgdx_data(tmp_path, testdata_dir):
     "mcq_intents, ref_output_filename",
     [
         (
-            "all_slots_slot_names_intent",
             False,
+            "sgd_text_sdt_separated_dialogue_all_intent",
         ),
         (
-            "all_slots_slot_names_intent_mcq",
             True,
+            "sgd_text_sdt_separated_dialogue_all_intent_mcq",
         ),
     ],
     ids=[
-        "sgd_text_sdt_separated_dialogue_all_intent",
-        "sgd_text_sdt_separated_dialogue_all_intent_mcq",
+        "all_slots_slot_names_intent",
+        "all_slots_slot_names_intent_mcq",
     ],
 )
 def test_generate_intent(
-    self, mcq_intents, ref_output_filename, tmp_path, testdata_dir
+    mcq_intents, ref_output_filename, tmp_path, testdata_dir
 ):
     temp_output = tmp_path / "output"
     ref_output = testdata_dir / "show_dont_tell" / ref_output_filename
@@ -181,7 +181,7 @@ def test_generate_intent(
     create_sgd_sdt_data.main(config)
 
     with temp_output.open() as temp_f, ref_output.open() as ref_f:
-        self.assertEqual(temp_f.readlines(), ref_f.readlines())
+        assert temp_f.readlines() == ref_f.readlines()
 
 
 if __name__ == "__main__":
