@@ -160,7 +160,7 @@ def test_populate_json_intent_predictions(dummy_intent_config):
     }
     dialog_id_to_dialogue = copy.deepcopy(DIALOG_ID_TO_DIALOGUE)
     convert_sgd_t5x_sdt_preds_to_dstc8.populate_json_predictions(
-        dummy_config, dialog_id_to_dialogue, frame_predictions
+        dummy_intent_config, dialog_id_to_dialogue, frame_predictions
     )
 
     actual_intent = dialog_id_to_dialogue["1_00000"]["turns"][0]["frames"][0]["state"][
