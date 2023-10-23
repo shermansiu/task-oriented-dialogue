@@ -37,21 +37,9 @@ import attrs
 import cattrs
 import tyro
 
-from gtod.state_tracking.d3st.common import MultipleChoiceFormat
+from gtod.state_tracking.d3st.common import MultipleChoiceFormat, GenerationLevel, DataFormat
 import gtod.util
 import gtod.sgd
-
-
-class GenerationLevelEnum(gtod.util.AutoNameEnum):
-    dst = enum.auto()
-    dst_intent = enum.auto()
-    dst_intent_act = enum.auto()
-
-
-class DataFormatEnum(gtod.util.AutoNameEnum):
-    full_desc = enum.auto()
-    item_name = enum.auto()
-    rand_name = enum.auto()
 
 
 @attrs.frozen
@@ -85,8 +73,8 @@ class CreateSgdSchemalessDataConfig:
     schema_file: pathlib.Path
     output_file: pathlib.Path
     delimiter: str = attrs.field(default="=")
-    level: GenerationLevelEnum = attrs.field(default=GenerationLevelEnum.dst)
-    data_format: DataFormatEnum = attrs.field(default=DataFormatEnum.full_desc)
+    level: GenerationLevel = attrs.field(default=GenerationLevel.dst)
+    data_format: DataFormat = attrs.field(default=DataFormat.full_desc)
     lowercase: bool = attrs.field(default=True)
     randomize_items: bool = attrs.field(default=True)
     multiple_choice: MultipleChoiceFormat = attrs.field(
@@ -201,7 +189,7 @@ def load_schema() -> tuple[collections.OrderedDict, SchemaInfo]:
                 }
             )
 
-            if config.data_format == DataFormatEnum.rand_name:
+            if config.data_format == DataFormat.rand_name:
                 item_desc.slots_rand_name.update(
                     {
                         _merge_domain_slot(domain, slot.name): "".join(
@@ -267,11 +255,11 @@ def _process_user_turn(
     # previous domain.
     slot_id = len(state_dict.slot_desc)
     for slot in slots:
-        if config.data_format == DataFormatEnum.full_desc:
+        if config.data_format == DataFormat.full_desc:
             desc = item_desc.slots[slot]
-        elif config.data_format == DataFormatEnum.item_name:
+        elif config.data_format == DataFormat.item_name:
             desc = slot
-        elif config.data_format == DataFormatEnum.rand_name:
+        elif config.data_format == DataFormat.rand_name:
             desc = item_desc.slots_rand_name[slot]
         else:
             raise ValueError(f"Invalid data format {config.data_format}")
@@ -333,11 +321,11 @@ def _process_user_turn(
         random.shuffle(intents)
     intent_id = len(state_dict.intent_desc)
     for intent in intents:
-        if config.data_format == DataFormatEnum.full_desc:
+        if config.data_format == DataFormat.full_desc:
             desc = item_desc.intents[intent]
-        if config.data_format == DataFormatEnum.item_name:
+        elif config.data_format == DataFormat.item_name:
             desc = intent
-        elif config.data_format == DataFormatEnum.rand_name:
+        elif config.data_format == DataFormat.rand_name:
             desc = item_desc.intents_rand_name[intent]
         else:
             raise ValueError(f"Invalid data format {config.data_format}")
@@ -499,14 +487,14 @@ def write_examples(turn_list: list[TurnInfo], out_file: io.TextIOWrapper) -> Non
         src = turn_info.out_ctx_with_desc_str
         tgt = ""
 
-        if config.level == GenerationLevelEnum.dst:
+        if config.level == GenerationLevel.dst:
             if turn_info.user_turn:
                 # Only output at user turns.
                 tgt = turn_info.out_state_str
-        elif config.level == GenerationLevelEnum.dst_intent:
+        elif config.level == GenerationLevel.dst_intent:
             if turn_info.user_turn:
                 tgt = " ".join([turn_info.out_state_str, turn_info.out_intent_str])
-        elif config.level == GenerationLevelEnum.dst_intent_act:
+        elif config.level == GenerationLevel.dst_intent_act:
             if not turn_info.user_turn:
                 # Only output at system turns, including:
                 # state + action + responses

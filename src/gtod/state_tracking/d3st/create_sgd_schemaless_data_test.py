@@ -22,6 +22,7 @@ import sys
 import pytest
 
 from gtod.state_tracking.d3st import create_sgd_schemaless_data
+from gtod.state_tracking.d3st import common
 
 
 Config = create_sgd_schemaless_data.CreateSgdSchemalessDataConfig
@@ -52,8 +53,8 @@ def test_generate_data_full_desc(
     ref_output = testdata_dir / f"sgd_text_v2_full_desc_{level}"
 
     with config_saver(
-        level=level,
-        data_format=data_format,
+        level=common.GenerationLevel(level),
+        data_format=common.DataFormat(data_format),
         delimiter="=",
         sgd_file=testdata_dir / "sgd_train.json",
         schema_file=testdata_dir / "sgd_train_schema.json",
@@ -78,8 +79,8 @@ def test_generate_data_item_name(level, data_format, tmp_path, testdata_dir):
     ref_output = testdata_dir / f"sgd_text_v2_item_name_{level}"
 
     with config_saver(
-        level=level,
-        data_format=data_format,
+        level=common.GenerationLevel(level),
+        data_format=common.DataFormat(data_format),
         delimiter="=",
         sgd_file=testdata_dir / "sgd_train.json",
         schema_file=testdata_dir / "sgd_train_schema.json",
@@ -104,14 +105,14 @@ def test_multiple_choice(level, data_format, tmp_path, testdata_dir):
     ref_output = testdata_dir / f"sgd_text_v2_multiple_choice_{level}"
 
     with config_saver(
-        level=level,
-        data_format=data_format,
+        level=common.GenerationLevel(level),
+        data_format=common.DataFormat(data_format),
         delimiter="=",
         sgd_file=testdata_dir / "sgd_train_categorical.json",
         schema_file=testdata_dir / "sgd_train_schema.json",
         output_file=temp_output,
         randomize_items=False,
-        multiple_choice="1a",
+        multiple_choice=common.MultipleChoiceFormat.one_a,
     ):
         slots, item_desc = create_sgd_schemaless_data.load_schema()
         create_sgd_schemaless_data.generate_data(slots, item_desc)
@@ -141,8 +142,8 @@ def test_generate_data_sample(
     )
 
     with config_saver(
-        level=level,
-        data_format=data_format,
+        level=common.GenerationLevel(level),
+        data_format=common.DataFormat(data_format),
         delimiter="=",
         sgd_file=testdata_dir / "sgd_train.json",
         schema_file=testdata_dir / "sgd_train_schema.json",

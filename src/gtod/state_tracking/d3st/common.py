@@ -22,3 +22,16 @@ class MultipleChoiceFormat(gtod.util.AutoNameEnum):
     none = enum.auto()
     a = enum.auto()
     one_a = "1a"
+
+
+class GenerationLevel(gtod.util.AutoNameEnum):
+    dst = enum.auto()
+    dst_intent = enum.auto()
+    dst_intent_act = enum.auto()
+
+
+class DataFormat(gtod.util.AutoNameEnum):
+    full_desc = enum.auto()
+    item_name = enum.auto()
+    rand_name = enum.auto()
+
