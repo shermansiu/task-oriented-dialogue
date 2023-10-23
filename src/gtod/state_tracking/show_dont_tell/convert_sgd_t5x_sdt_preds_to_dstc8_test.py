@@ -139,7 +139,7 @@ def test_populate_json_intent_predictions(dummy_config):
             " i book you a table? [user] yes for two please. [system] what"
             " time would you like it for? [user] in the morning 11:15 "
             "please. [slots] number_of_seats=c of possible values a) 4 b) "
-            "1 c) 2 d) 3 e) 6 f) 5 [intent] a of possible options a) "
+            "1 c) 2 d) 3 e) 6 f) 5 [intent] a of possible values a) "
             "reserverestaurant b) findrestaurants [context] [user] hi, "
             "could you get me a vegarian restaurant booking on the 8th "
             "please?",
