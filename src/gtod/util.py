@@ -6,7 +6,7 @@ class AutoNameEnum(str, enum.Enum):
         return name
 
 
-class DatasetSplitEnum(AutoNameEnum):
+class DatasetSplit(AutoNameEnum):
     train = enum.auto()
     dev = enum.auto()
     test = enum.auto()
