@@ -22,6 +22,7 @@ import pathlib
 import re
 
 import attrs
+import cattrs
 import tyro
 
 from gtod.state_tracking.show_dont_tell import common
@@ -46,11 +47,23 @@ class CliConfig:
     t5x_predictions_jsonl: pathlib.Path
     dstc8_data_dir: pathlib.Path
     output_dir: pathlib.Path
-    dataset_split: common.DatasetSplit = attrs.field(
-        default=common.DatasetSplit.test
-    )
+    dataset_split: common.DatasetSplit = attrs.field(default=common.DatasetSplit.test)
     delimiter: str = attrs.field(default="=")
     evaluate_intent_acc: bool = attrs.field(default=False)
+
+
+@attrs.frozen
+class FramePredictionInput:
+    inputs_pretokenized: str
+    dialogue_id: str
+    turn_id: int
+    frame_id: int
+
+
+@attrs.frozen
+class FramePredictions:
+    input: FramePredictionInput
+    prediction: str
 
 
 _SDT_CAT_SLOT_IDENTIFIER = "of possible values"
@@ -129,21 +142,22 @@ def populate_json_predictions(
         dialog_id_to_dialogue: A mapping from dialog id to the dialogue json object
         frame_predictions: A dict containing T5X predictions and example metadata
     """
-    preds = frame_predictions["prediction"]
+    f_preds = cattrs.structure(frame_predictions, FramePredictions)
+    preds = f_preds.prediction
     if not isinstance(preds, str):
         raise ValueError(
             f"'preds' must be string type, " f"not {type(preds)}. preds: {preds}"
         )
-    dialog_id = frame_predictions["input"]["dialogue_id"]
-    turn_id = int(frame_predictions["input"]["turn_id"])
-    frame_id = int(frame_predictions["input"]["frame_id"])
+    dialog_id = f_preds.input.dialogue_id
+    turn_id = f_preds.input.turn_id
+    frame_id = f_preds.input.frame_id
 
     if dialog_id not in dialog_id_to_dialogue:
         raise ValueError(f"Dialogue ID {dialog_id} not found.")
 
     frame = dialog_id_to_dialogue[dialog_id]["turns"][turn_id]["frames"][frame_id]
 
-    input_str = frame_predictions["input"]["inputs_pretokenized"]
+    input_str = f_preds.input.inputs_pretokenized
 
     # Create a dict(slot -> dict(multiple-choice letter -> value)) for cat slots.
     slot_to_option_to_value = _create_categorical_slot_to_value_map(input_str)
