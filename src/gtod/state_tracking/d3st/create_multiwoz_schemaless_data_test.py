@@ -79,7 +79,7 @@ def test_item_name(schema_file, tmp_path):
         "29:bus-departure 30:hospital-department 31:hotel-day "
         "32:attraction-area 33:restaurant-people 34:taxi-destination [user] "
         "hi, can you help me find a train departing from cambridge? [system] "
-        "what is your destination? [user] i am going to leicester",
+        "what is your destination? [user] i am going to leicester"
     )
     assert examples[1].tgt == "[states] 2:cambridge 28:leicester [intents] [req_slots]"
     assert examples[1].dialog_id == "mul0708.json"
@@ -93,7 +93,7 @@ def test_item_name(schema_file, tmp_path):
         "hotel-parking, hotel-internet, restaurant-day, attraction-type, "
         "restaurant-pricerange, hotel-area, train-destination, bus-departure, "
         "hospital-department, hotel-day, attraction-area, restaurant-people, "
-        "taxi-destination",
+        "taxi-destination"
     )
 
 
@@ -142,7 +142,7 @@ def test_shuffled_item_name(schema_file, tmp_path):
         "crneet 29f) bracgmdei 30:xiiettsatn-iando 31:obasi-eitsdutnn "
         "32:arbviyr-itaex 33:pdtnreeuiaartr- 34:d-turaeerapxit [user] hi, can "
         "you help me find a train departing from cambridge? [system] what is "
-        "your destination? [user] i am going to leicester",
+        "your destination? [user] i am going to leicester"
     )
     assert examples[1].tgt == "[states] 6:leicester 33:cambridge [intents] [req_slots]"
     assert examples[1].dialog_id == "mul0708.json"
@@ -157,7 +157,7 @@ def test_shuffled_item_name(schema_file, tmp_path):
         "hotel-stay, restaurant-pricerange, hotel-name, restaurant-food, "
         "bus-leaveat, hotel-day, train-day, restaurant-day, attraction-area, "
         "taxi-destination, bus-destination, taxi-arriveby, train-departure, "
-        "taxi-departure",
+        "taxi-departure"
     )
 
 
@@ -202,7 +202,7 @@ def test_full_desc(schema_file, tmp_path):
         "booking 32:area or place of the attraction 33:number of people "
         "booking the restaurant 34:destination of taxi [user] hi, can you help "
         "me find a train departing from cambridge? [system] what is your "
-        "destination? [user] i am going to leicester",
+        "destination? [user] i am going to leicester"
     )
     assert examples[1].tgt == "[states] 2:cambridge 28:leicester [intents] [req_slots]"
     assert examples[1].dialog_id == "mul0708.json"
@@ -216,7 +216,7 @@ def test_full_desc(schema_file, tmp_path):
         "hotel-parking, hotel-internet, restaurant-day, attraction-type, "
         "restaurant-pricerange, hotel-area, train-destination, bus-departure, "
         "hospital-department, hotel-day, attraction-area, restaurant-people, "
-        "taxi-destination",
+        "taxi-destination"
     )
 
 
@@ -265,7 +265,7 @@ def test_full_desc_with_domain(schema_file, tmp_path):
         "33:restaurant-number of people booking the restaurant "
         "34:taxi-destination of taxi [user] hi, can you help me find a train "
         "departing from cambridge? [system] what is your destination? [user] i "
-        "am going to leicester",
+        "am going to leicester"
     )
     assert examples[1].tgt == "[states] 2:cambridge 28:leicester [intents] [req_slots]"
     assert examples[1].dialog_id == "mul0708.json"
@@ -279,7 +279,7 @@ def test_full_desc_with_domain(schema_file, tmp_path):
         "hotel-parking, hotel-internet, restaurant-day, attraction-type, "
         "restaurant-pricerange, hotel-area, train-destination, bus-departure, "
         "hospital-department, hotel-day, attraction-area, restaurant-people, "
-        "taxi-destination",
+        "taxi-destination"
     )
 
 
@@ -324,7 +324,7 @@ def test_delimiter(schema_file, tmp_path):
         "booking 32=area or place of the attraction 33=number of people "
         "booking the restaurant 34=destination of taxi [user] hi, can you help "
         "me find a train departing from cambridge? [system] what is your "
-        "destination? [user] i am going to leicester",
+        "destination? [user] i am going to leicester"
     )
     assert examples[1].tgt == "[states] 2=cambridge 28=leicester [intents] [req_slots]"
     assert examples[1].dialog_id == "mul0708.json"
@@ -338,7 +338,7 @@ def test_delimiter(schema_file, tmp_path):
         "hotel-parking, hotel-internet, restaurant-day, attraction-type, "
         "restaurant-pricerange, hotel-area, train-destination, bus-departure, "
         "hospital-department, hotel-day, attraction-area, restaurant-people, "
-        "taxi-destination",
+        "taxi-destination"
     )
 
 
@@ -381,14 +381,14 @@ def test_multiple_choice_a(schema_file, tmp_path):
         "d) monday e) wednesday f) saturday g) thursday 5:destination of the "
         "train a) leicester b) cambridge [user] hi, can you help me find a "
         "train departing from cambridge? [system] what is your destination? "
-        "[user] i am going to leicester",
+        "[user] i am going to leicester"
     )
     assert examples[1].tgt == "[states] 0:b 5:a [intents] [req_slots]"
     assert examples[1].dialog_id == "mul0708.json"
     assert examples[1].turn == 3
     assert examples[1].metadata["slot_ordering"] == (
         "train-departure, train-arriveby, train-people, train-leaveat, "
-        "train-day, train-destination",
+        "train-day, train-destination"
     )
 
 
@@ -431,14 +431,14 @@ def test_multiple_choice_1a(schema_file, tmp_path):
         "4c) tuesday 4d) monday 4e) wednesday 4f) saturday 4g) thursday "
         "5:destination of the train 5a) leicester 5b) cambridge [user] hi, can "
         "you help me find a train departing from cambridge? [system] what is "
-        "your destination? [user] i am going to leicester",
+        "your destination? [user] i am going to leicester"
     )
     assert examples[1].tgt == "[states] 0:0b 5:5a [intents] [req_slots]"
     assert examples[1].dialog_id == "mul0708.json"
     assert examples[1].turn == 3
     assert examples[1].metadata["slot_ordering"] == (
         "train-departure, train-arriveby, train-people, train-leaveat, "
-        "train-day, train-destination",
+        "train-day, train-destination"
     )
 
 
@@ -481,14 +481,14 @@ def test_target_separators(schema_file, tmp_path):
         "4c) tuesday 4d) monday 4e) wednesday 4f) saturday 4g) thursday "
         "5:destination of the train 5a) leicester 5b) cambridge [user] hi, can "
         "you help me find a train departing from cambridge? [system] what is "
-        "your destination? [user] i am going to leicester",
+        "your destination? [user] i am going to leicester"
     )
     assert examples[1].tgt == "[states] 0:0b ; 5:5a [intents] [req_slots]"
     assert examples[1].dialog_id == "mul0708.json"
     assert examples[1].turn == 3
     assert examples[1].metadata["slot_ordering"] == (
         "train-departure, train-arriveby, train-people, train-leaveat, "
-        "train-day, train-destination",
+        "train-day, train-destination"
     )
 
 
@@ -558,7 +558,7 @@ def test_blocked_one_domain(schema_file, tmp_path):
         "hotel-parking, hotel-internet, restaurant-day, attraction-type, "
         "restaurant-pricerange, hotel-area, train-destination, bus-departure, "
         "hospital-department, hotel-day, attraction-area, restaurant-people, "
-        "taxi-destination",
+        "taxi-destination"
     )
 
 
