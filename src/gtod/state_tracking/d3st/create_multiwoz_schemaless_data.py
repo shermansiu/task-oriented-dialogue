@@ -107,7 +107,9 @@ class CreateMultiwozSchemalessDataConfig:
         )
 
 
-config: CreateMultiwozSchemalessDataConfig | None = None
+config = CreateMultiwozSchemalessDataConfig(
+    pathlib.Path("."), pathlib.Path("."), pathlib.Path(".")
+)
 
 
 def create_schemaless_data(
@@ -316,8 +318,6 @@ def create_schemaless_data(
 
 
 def main():
-    assert config is not None
-
     random.seed(config.random_seed)
     multiwoz_data = multiwoz_utils.load_data_as_dataclasses(
         data_path=config.multiwoz_dir,

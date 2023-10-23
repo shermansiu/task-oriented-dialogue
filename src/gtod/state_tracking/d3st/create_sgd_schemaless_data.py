@@ -93,7 +93,9 @@ class CreateSgdSchemalessDataConfig:
     uniform_domain_distribution: bool = attrs.field(default=False)
 
 
-config: CreateSgdSchemalessDataConfig | None = None
+config= CreateSgdSchemalessDataConfig(
+    pathlib.Path("."), pathlib.Path("."), pathlib.Path(".")
+)
 
 
 @attrs.define
@@ -141,7 +143,6 @@ def load_schema() -> tuple[collections.OrderedDict, SchemaInfo]:
     # multiple intents/actions turn out to be a problem).
     # TODO(jeffreyzhao): Clean up how we store schema information by using a
     # dataclass.
-    assert config is not None
     slots = collections.OrderedDict()
     item_desc = {
         "slots": {},
@@ -231,7 +232,6 @@ def _process_user_turn(
     Returns:
         A dictionary that maps slot descriptions to ids.
     """
-    assert config is not None
 
     slot_values = state["slot_values"]
     domain_slot_values = {}
@@ -415,8 +415,6 @@ def process_turn(
         Prefix string (item descriptions) from the current turn and per-frame
         TurnInfo objects.
     """
-    assert config is not None
-
     speaker = turn["speaker"].lower()
     user_turn = speaker == "user"
     turn_info.user_turn = user_turn
@@ -537,8 +535,6 @@ def example_filter(turn_list: list[TurnInfo]):
         Specified percentage of examples, with uniform domain distribution if
         needed.
     """
-    assert config is not None
-
     if config.data_percent == 0.0:
         return turn_list
 
@@ -589,8 +585,6 @@ def generate_data(ordered_slots, item_desc):
         ordered_slots: An ordered dictionary containing slot names.
         item_desc: A dictionary containing items and their descriptions.
     """
-    assert config is not None
-
     config.output_file.parent.mkdir(exist_ok=True, parents=True)
     with config.output_file.open("w") as out_file:
         all_turns_per_frame = []
@@ -610,8 +604,6 @@ def generate_data(ordered_slots, item_desc):
 
 
 def main():
-    assert config is not None
-
     slots, item_desc = load_schema()
     generate_data(slots, item_desc)
 

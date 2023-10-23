@@ -90,7 +90,9 @@ class CreateMultiwoz21TradeSchemalessDataConfig:
         )
 
 
-config: CreateMultiwoz21TradeSchemalessDataConfig | None = None
+config = CreateMultiwoz21TradeSchemalessDataConfig(
+    pathlib.Path("."), pathlib.Path("."), pathlib.Path(".")
+)
 
 
 def create_schemaless_data(
@@ -288,8 +290,6 @@ def create_schemaless_data(
 
 
 def main():
-    assert config is not None
-
     random.seed(config.random_seed)
     multiwoz_data = multiwoz_utils.load_data(
         data_path=config.multiwoz_dir, multiwoz_version="2.1", is_trade=True
