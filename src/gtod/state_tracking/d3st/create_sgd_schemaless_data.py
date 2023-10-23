@@ -365,7 +365,7 @@ def _process_user_turn(
         req_slot_id = desc_to_slot_id[slot_name]
         # Note the order of requested slots is totally determined by the user's
         # utterance, and is not guaranteed to be sorted.
-        state_dict["req_slots"].append(str(req_slot_id))
+        state_dict.req_slots.append(str(req_slot_id))
 
     return desc_to_slot_id
 
