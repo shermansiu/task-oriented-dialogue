@@ -16,8 +16,10 @@
 
 import collections
 import collections.abc
+import logging
 import pathlib
 import attrs
+import datasets
 
 
 # TODO(jeffreyzhao): Support extending with multiple fields
@@ -43,7 +45,7 @@ class TextToTextExample:
 
 
 def write_data(
-    examples: collections.abc.MutableSequence[TextToTextExample], output_path: str
+    examples: collections.abc.MutableSequence[TextToTextExample], output_path: pathlib.Path
 ) -> None:
     """Writes examples to the given output path.
 
@@ -52,41 +54,27 @@ def write_data(
         output_path: The file path to write examples out to
     """
 
-    def _bytes_feature(value):
-        """Returns a bytes_list from a string / byte."""
-        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+    output_path.parent.mkdir(exist_ok=True, parents=True)
 
-    def _int64_feature(value):
-        """Returns an int64_list from a bool / enum / int / uint."""
-        return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+    input = []
+    value = []
+    dialog_id = []
+    turn = []
+    dataset_dict = collections.defaultdict(list)
 
-    tf.io.gfile.makedirs(os.path.dirname(output_path))
+    for example in examples:
+        input.append(example.src)
+        value.append(example.tgt)
+        dialog_id.append(example.dialog_id)
+        turn.append(example.turn)
 
-    with tf.io.TFRecordWriter(output_path) as out_file:
-        for example in examples:
-            features = {
-                "input": _bytes_feature(example.src.encode("utf-8")),
-                "value": _bytes_feature(example.tgt.encode("utf-8")),
-                "dialog_id": _bytes_feature(example.dialog_id.encode("utf-8")),
-                "turn": _int64_feature(example.turn),
-            }
-            for key, val in example.metadata.items():
-                assert key not in ("input", "value", "dialog_id", "turn")
-                features[key] = _bytes_feature(val.encode("utf-8"))
-            tf_example = tf.train.Example(features=tf.train.Features(feature=features))
-            out_file.write(tf_example.SerializeToString())
-        logging.info(
-            "Wrote %s with %d examples", os.path.basename(output_path), len(examples)
-        )
+        for key in examples[0].metadata:
+            assert key not in ("input", "value", "dialog_id", "turn")
+            dataset_dict[key].append(example.metadata.get(key, ''))
 
+    dataset = datasets.Dataset.from_dict(dataset_dict)
+    dataset.save_to_disk(output_path)
 
-def decode_fn(record_bytes: tf.Tensor) -> dict[str, tf.Tensor]:
-    return tf.io.parse_single_example(
-        record_bytes,
-        {
-            "input": tf.io.FixedLenFeature([], dtype=tf.string),
-            "value": tf.io.FixedLenFeature([], dtype=tf.string),
-            "dialog_id": tf.io.FixedLenFeature([], dtype=tf.string),
-            "turn": tf.io.FixedLenFeature([], dtype=tf.int64),
-        },
+    logging.info(
+        "Wrote %s with %d examples", output_path.name, len(examples)
     )
