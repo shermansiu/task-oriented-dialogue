@@ -54,7 +54,10 @@ DIALOG_ID_TO_DIALOGUE = {
 @pytest.fixture
 def dummy_config():
     return convert_sgd_t5x_sdt_preds_to_dstc8.CliConfig(
-        pathlib.Path("."), pathlib.Path("."), pathlib.Path(".")
+        pathlib.Path("."),
+        pathlib.Path("."),
+        pathlib.Path("."),
+        evaluate_intent_acc=True,
     )
 
 
