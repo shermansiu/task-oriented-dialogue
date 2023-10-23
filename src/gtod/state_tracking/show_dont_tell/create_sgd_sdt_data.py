@@ -61,9 +61,9 @@ class Options:
 
     sgd_dir: pathlib.Path
     sgdx_dir: pathlib.Path | None
-    prompt_format: str | None
-    context_format: str
-    target_format: str
+    prompt_format: common.PromptFormat | None
+    context_format: common.ContextFormat
+    target_format: common.TargetFormat
     lowercase: bool
     add_intents: bool
     mcq_cat_vals: bool
