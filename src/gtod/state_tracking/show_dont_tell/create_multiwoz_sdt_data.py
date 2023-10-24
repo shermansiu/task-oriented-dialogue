@@ -120,7 +120,7 @@ USER_TOK = "[user]"
 SYS_TOK = "[system]"
 
 _PROMPTS_MAP = {
-    "separated": sdt_prompts.MW_SEPARATED_ANNOTATION_PROMPTS,
+    common.PromptFormat.separated: sdt_prompts.MW_SEPARATED_ANNOTATION_PROMPTS,
 }
 
 
@@ -128,12 +128,12 @@ _PROMPTS_MAP = {
 class Options:
     """Options for generating SDT examples."""
 
-    multiwoz_version: str
+    multiwoz_version: multiwoz_utils.MultiwozVersion
     is_trade: bool
-    prompt_format: str
+    prompt_format: common.PromptFormat
     prompt_indices: list[int] | None
-    context_format: str
-    target_format: str
+    context_format: common.ContextFormat
+    target_format: common.TargetFormat
     mcq_cat_vals: bool
     randomize_slots: bool
     randomize_cat_vals: bool
@@ -313,9 +313,7 @@ def main(config: CliConfig):
             random.shuffle(examples)
     split_to_examples["dev_test"] = split_to_examples["dev"] + split_to_examples["test"]
     for split, examples in split_to_examples.items():
-        text_to_text_utils.write_data(
-            examples, config.output_dir / f"{split}"
-        )
+        text_to_text_utils.write_data(examples, config.output_dir / f"{split}")
 
 
 if __name__ == "__main__":

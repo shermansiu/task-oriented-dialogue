@@ -15,13 +15,13 @@
 """Tests for create_multiwoz_sdt_data."""
 
 import json
-import pathlib
 import shutil
 import sys
 
 import pytest
 
 from gtod.state_tracking.show_dont_tell import create_multiwoz_sdt_data
+from gtod.state_tracking.show_dont_tell import common
 from gtod.state_tracking.utils import multiwoz_utils
 
 
@@ -126,12 +126,12 @@ def test_generate_data(
     examples = create_multiwoz_sdt_data.create_sdt_examples(
         multiwoz_data.train_json,
         create_multiwoz_sdt_data.Options(
-            multiwoz_version=multiwoz_version,
+            multiwoz_version=multiwoz_utils.MultiwozVersion(multiwoz_version),
             is_trade=is_trade,
-            prompt_format="separated",
+            prompt_format=common.PromptFormat.separated,
             prompt_indices=[0],
-            context_format="dialogue",
-            target_format="all",
+            context_format=common.ContextFormat.dialogue,
+            target_format=common.TargetFormat.all,
             randomize_slots=False,
             use_active_domains_only=use_active_domains_only,
             blocked_domains=blocked_domains,
