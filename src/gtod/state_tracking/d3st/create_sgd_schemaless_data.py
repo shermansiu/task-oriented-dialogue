@@ -478,7 +478,7 @@ def process_turn(
 
     user_turn_prefix = ""
     desc_to_slot_id = {}
-    turn_info_per_frame = []
+    turn_info_per_frame: list[TurnInfo] = []
     for frame_id, frames in enumerate(turn["frames"]):
         domain = frames["service"]
         turn_info.frame_id = str(frame_id)
@@ -639,7 +639,7 @@ def generate_data(
     """
     config.output_file.parent.mkdir(exist_ok=True, parents=True)
     with config.output_file.open("w") as out_file:
-        all_turns_per_frame = []
+        all_turns_per_frame: list[TurnInfo] = []
 
         if config.sgd_file.is_dir():
             sgd_dialogue_files = config.sgd_file.glob("dialogues*.json")
