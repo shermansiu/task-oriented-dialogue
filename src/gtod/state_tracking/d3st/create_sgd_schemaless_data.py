@@ -516,7 +516,7 @@ def process_turn(
         turn_info.out_intent_str += "".join(state_dict.intent_ids)
         turn_info.out_intent_str += " [req_slots] "
         turn_info.out_intent_str += " ".join(state_dict.req_slots)
-        turn_info_per_frame.append(turn_info)
+        turn_info_per_frame.append(copy.copy(turn_info))
 
     return user_turn_prefix, turn_info_per_frame
 
