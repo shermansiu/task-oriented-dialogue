@@ -70,6 +70,7 @@ class CliConfig:
             1a: Use the prompt "1: ... 1a) 1b) 1c)."
         data_percent: If not 0, the percentage of data to be generated.
         uniform_domain_distribution: When data_percent > 0 make sure domains are (close-to) uniform distribution.
+        add_header: Whether or not to add the TSV header.
     """
 
     sgd_file: pathlib.Path
@@ -85,6 +86,7 @@ class CliConfig:
     )
     data_percent: float = attrs.field(default=0.0)
     uniform_domain_distribution: bool = attrs.field(default=False)
+    add_header: bool = attrs.field(default=False)
 
     @classmethod
     def from_sgd_split(
@@ -99,6 +101,7 @@ class CliConfig:
         multiple_choice: MultipleChoiceFormat = MultipleChoiceFormat.none,
         data_percent: float = 0.0,
         uniform_domain_distribution: bool = False,
+        add_header: bool = False,
     ):
         """Generate the TSV dataset from the SGD data split directory.
 
@@ -126,6 +129,7 @@ class CliConfig:
             multiple_choice=multiple_choice,
             data_percent=data_percent,
             uniform_domain_distribution=uniform_domain_distribution,
+            add_header=add_header,
         )
 
 
@@ -530,6 +534,13 @@ def write_examples(
         turn_list: A list of dict accmulating essential info from each turn.
         out_file: A GFile object for file output.
     """
+    if config.add_header:
+        out_file.write(
+            "{}\n".format(
+                "\t".join(["prompt", "target", "dialogue_id", "turn_id", "frame_id"])
+            )
+        )
+
     for turn_info in turn_list:
         # Write samples to file. Each example is divided into two parts
         # separated by \t, the first part being inputs to the model, and the
