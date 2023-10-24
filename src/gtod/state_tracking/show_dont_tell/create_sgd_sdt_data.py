@@ -99,7 +99,7 @@ class CliConfig:
         data_percent: If not 0.0, only write this proportion of data, and discard the rest of the examples. For data efficiency experiments. Not compatible with `k_shot`.
         k_shot: If not 0, sample this many examples from each service. For data efficiency experiments. Not compatible with `data_percent`.
         use_intent_slot_descs: Whether to add D3ST descriptions to prompt.
-
+        add_header: Whether or not to add the TSV header.
     """
 
     input_dir: pathlib.Path
@@ -125,6 +125,7 @@ class CliConfig:
     data_percent: float = attrs.field(default=0.0)
     k_shot: int = attrs.field(default=0)
     use_intent_slot_descs: bool = attrs.field(default=False)
+    add_header: bool = attrs.field(default=False)
 
     @property
     def as_options(self) -> Options:
@@ -198,7 +199,8 @@ def build_example(
 def create_examples_from_dialogue(
     dialogue: collections.abc.Mapping[str, tp.Any],
     service_to_prompts: dict[str, list[Prompt]] | None,
-    service_to_schema: collections.abc.Mapping[str, sgd_utils.Schema] | tp.Literal[False],
+    service_to_schema: collections.abc.Mapping[str, sgd_utils.Schema]
+    | tp.Literal[False],
     options: Options,
 ) -> list[Example]:
     """Returns example strings created from a dialogue.
@@ -329,9 +331,7 @@ def main(config: CliConfig) -> None:
 
         # Optionally sample a proportion of examples only
         if config.data_percent > 0.0:
-            examples = random.sample(
-                examples, int(config.data_percent * len(examples))
-            )
+            examples = random.sample(examples, int(config.data_percent * len(examples)))
         elif config.k_shot > 0:
             # A dict of service to a list of examples belonging to that service.
             service_to_examples = collections.defaultdict(list)
@@ -345,6 +345,15 @@ def main(config: CliConfig) -> None:
                     random.sample(examples_by_service, k=config.k_shot)
                     for examples_by_service in service_to_examples.values()
                 ]
+            )
+
+        if config.add_header:
+            outfile.write(
+                "{}\n".format(
+                    "\t".join(
+                        ["prompt", "target", "dialogue_id", "turn_id", "frame_id"]
+                    )
+                )
             )
 
         # Write example strings to file
