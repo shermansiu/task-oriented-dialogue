@@ -25,7 +25,6 @@ This is version 2, which generates the schemaless data format:
 """
 import collections
 import copy
-import enum
 import io
 import json
 import pathlib
