@@ -134,7 +134,7 @@ def generate_prompt_str(
     selected_prompts = []
     for key in keys:
         for p_idx, prompt in enumerate(key_to_prompts[key]):
-            if not prompt_indices or str(p_idx) in prompt_indices:
+            if not prompt_indices or p_idx in prompt_indices:
                 selected_prompts.append(prompt)
     if randomize_slots:
         random.shuffle(selected_prompts)
