@@ -22,8 +22,7 @@ To cite this paper:
 
 ```
 python -m zero_shot_task_oriented_dialog.d3st.create_sgd_schemaless_data \
-  --sgd_file="$SGD_FILE" \
-  --schema_file="$SCHEMA_FILE" \
+  --sgd_split_dir="$SGD_FILE" \
   --output_file="$OUTPUT_FILE" \
   --delimiter== \
   --level=dst_intent \
@@ -31,7 +30,7 @@ python -m zero_shot_task_oriented_dialog.d3st.create_sgd_schemaless_data \
   --multiple_choice=1a
 ```
 
-Note that this command is per-file --- the output then needs to be combined.
+Note that this command generates the TSV for each data split.
 
 ### MultiWOZ
 

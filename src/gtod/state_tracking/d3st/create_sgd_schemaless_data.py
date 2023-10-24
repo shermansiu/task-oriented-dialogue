@@ -37,7 +37,11 @@ import attrs
 import cattrs
 import tyro
 
-from gtod.state_tracking.d3st.common import MultipleChoiceFormat, GenerationLevel, DataFormat
+from gtod.state_tracking.d3st.common import (
+    MultipleChoiceFormat,
+    GenerationLevel,
+    DataFormat,
+)
 import gtod.util
 import gtod.sgd
 
@@ -82,6 +86,48 @@ class CliConfig:
     )
     data_percent: float = attrs.field(default=0.0)
     uniform_domain_distribution: bool = attrs.field(default=False)
+
+    @classmethod
+    def from_sgd_split(
+        cls,
+        sgd_split_dir: pathlib.Path,
+        output_file: pathlib.Path,
+        delimiter: str = "=",
+        level: GenerationLevel = GenerationLevel.dst,
+        data_format: DataFormat = DataFormat.full_desc,
+        lowercase: bool = True,
+        randomize_items: bool = True,
+        multiple_choice: MultipleChoiceFormat = MultipleChoiceFormat.none,
+        data_percent: float = 0.0,
+        uniform_domain_distribution: bool = False,
+    ):
+        """Generate the TSV dataset from the SGD data split directory.
+
+        We are keeping the original initalization because of the tests
+        """
+        if not sgd_split_dir.is_dir():
+            raise ValueError(f"Directory '{sgd_split_dir}' is not a valid directory!")
+
+        schema_file = sgd_split_dir / "schema.json"
+        if not schema_file.is_file():
+            raise ValueError(f"Schema file not found at '{schema_file}'")
+
+        if not list(sgd_split_dir.glob("dialogues*.json")):
+            raise ValueError(f"No dialogue JSON files found at {sgd_split_dir}")
+
+        return cls(
+            sgd_file=sgd_split_dir,
+            schema_file=schema_file,
+            output_file=output_file,
+            delimiter=delimiter,
+            level=level,
+            data_format=data_format,
+            lowercase=lowercase,
+            randomize_items=randomize_items,
+            multiple_choice=multiple_choice,
+            data_percent=data_percent,
+            uniform_domain_distribution=uniform_domain_distribution,
+        )
 
 
 @attrs.define
@@ -151,10 +197,7 @@ def load_schema(config: CliConfig) -> tuple[collections.OrderedDict, SchemaInfo]
         for schema in cattrs.structure(json.load(sm_file), gtod.sgd.Schema):
             domain = schema.service_name
             slots.update(
-                {
-                    _merge_domain_slot(domain, slot.name): ""
-                    for slot in schema.slots
-                }
+                {_merge_domain_slot(domain, slot.name): "" for slot in schema.slots}
             )
             item_desc.slots.update(
                 {
@@ -450,10 +493,18 @@ def process_turn(
             turn_info.out_state_str = "[states]"
             turn_info.out_intent_str = "[intents]"
             desc_to_slot_id = _process_user_turn(
-                config, frames["state"], turn_info, cumu_slots, domain, item_desc, state_dict
+                config,
+                frames["state"],
+                turn_info,
+                cumu_slots,
+                domain,
+                item_desc,
+                state_dict,
             )
         else:
-            _process_agent_turn(config, frames["actions"], turn_info, domain, desc_to_slot_id)
+            _process_agent_turn(
+                config, frames["actions"], turn_info, domain, desc_to_slot_id
+            )
 
         # Add item description prefixes and states to outputs (coming from user
         # turns).
@@ -471,7 +522,9 @@ def process_turn(
     return user_turn_prefix, turn_info_per_frame
 
 
-def write_examples(config: CliConfig, turn_list: list[TurnInfo], out_file: io.TextIOWrapper) -> None:
+def write_examples(
+    config: CliConfig, turn_list: list[TurnInfo], out_file: io.TextIOWrapper
+) -> None:
     """Format output example strings and write to file.
 
     Args:
@@ -518,7 +571,6 @@ def write_examples(config: CliConfig, turn_list: list[TurnInfo], out_file: io.Te
             )
             if config.lowercase:
                 example = example.lower()
-            print(example)
             out_file.write("{}\n".format(example.strip()))
 
 
@@ -577,7 +629,9 @@ def example_filter(config: CliConfig, turn_list: list[TurnInfo]):
         return uniform_turn_list
 
 
-def generate_data(config: CliConfig, ordered_slots: collections.OrderedDict, item_desc: SchemaInfo):
+def generate_data(
+    config: CliConfig, ordered_slots: collections.OrderedDict, item_desc: SchemaInfo
+):
     """Generate SGD examples in text format.
 
     Args:
@@ -587,19 +641,32 @@ def generate_data(config: CliConfig, ordered_slots: collections.OrderedDict, ite
     config.output_file.parent.mkdir(exist_ok=True, parents=True)
     with config.output_file.open("w") as out_file:
         all_turns_per_frame = []
-        with config.sgd_file.open() as sgd_in:
-            for dlg in json.load(sgd_in):
-                # Cumulative states throughout this dialog.
-                cumu_slots = copy.deepcopy(ordered_slots)
-                turn_info = TurnInfo(dialogue_id=dlg["dialogue_id"])
-                prefix = ""
-                for turn_idx, turn in enumerate(dlg["turns"]):
-                    prefix, per_frame_turn_info = process_turn(
-                        config, turn, turn_info, cumu_slots, item_desc, prefix, turn_idx
-                    )
-                    all_turns_per_frame.extend(copy.deepcopy(per_frame_turn_info))
 
-            write_examples(config, example_filter(config, all_turns_per_frame), out_file)
+        if config.sgd_file.is_dir():
+            sgd_dialogue_files = config.sgd_file.glob("dialogues*.json")
+        else:
+            sgd_dialogue_files = (config.sgd_file,)
+
+        for sgd_dialogue_file in sgd_dialogue_files:
+            with sgd_dialogue_file.open() as sgd_in:
+                for dlg in json.load(sgd_in):
+                    # Cumulative states throughout this dialog.
+                    cumu_slots = copy.deepcopy(ordered_slots)
+                    turn_info = TurnInfo(dialogue_id=dlg["dialogue_id"])
+                    prefix = ""
+                    for turn_idx, turn in enumerate(dlg["turns"]):
+                        prefix, per_frame_turn_info = process_turn(
+                            config,
+                            turn,
+                            turn_info,
+                            cumu_slots,
+                            item_desc,
+                            prefix,
+                            turn_idx,
+                        )
+                        all_turns_per_frame.extend(copy.deepcopy(per_frame_turn_info))
+
+        write_examples(config, example_filter(config, all_turns_per_frame), out_file)
 
 
 def main(config: CliConfig):
@@ -608,5 +675,5 @@ def main(config: CliConfig):
 
 
 if __name__ == "__main__":
-    config = tyro.cli(CliConfig)
+    config = tyro.cli(CliConfig.from_sgd_split)
     main(config)
