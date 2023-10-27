@@ -34,4 +34,3 @@ class DataFormat(gtod.util.AutoNameEnum):
     full_desc = enum.auto()
     item_name = enum.auto()
     rand_name = enum.auto()
-

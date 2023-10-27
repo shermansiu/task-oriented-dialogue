@@ -45,7 +45,8 @@ class TextToTextExample:
 
 
 def write_data(
-    examples: collections.abc.MutableSequence[TextToTextExample], output_path: pathlib.Path
+    examples: collections.abc.MutableSequence[TextToTextExample],
+    output_path: pathlib.Path,
 ) -> None:
     """Writes examples to the given output path.
 
@@ -70,11 +71,9 @@ def write_data(
 
         for key in examples[0].metadata:
             assert key not in ("input", "value", "dialog_id", "turn")
-            dataset_dict[key].append(example.metadata.get(key, ''))
+            dataset_dict[key].append(example.metadata.get(key, ""))
 
     dataset = datasets.Dataset.from_dict(dataset_dict)
     dataset.save_to_disk(output_path)
 
-    logging.info(
-        "Wrote %s with %d examples", output_path.name, len(examples)
-    )
+    logging.info("Wrote %s with %d examples", output_path.name, len(examples))

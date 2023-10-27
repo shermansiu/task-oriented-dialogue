@@ -20,9 +20,8 @@ import sys
 
 import pytest
 
-from gtod.state_tracking.show_dont_tell import create_multiwoz_sdt_data
-from gtod.state_tracking.show_dont_tell import common
-from gtod.state_tracking.utils import multiwoz_utils
+from gtod.datasets.state_tracking.show_dont_tell import create_multiwoz_sdt_data, common
+from gtod.datasets.state_tracking.utils import multiwoz_utils
 
 
 @pytest.fixture(autouse=True)

@@ -31,11 +31,8 @@ import typing as tp
 
 import attrs
 import tyro
-from gtod.state_tracking.show_dont_tell import common
-from gtod.state_tracking.show_dont_tell import sdt_prompts
-from gtod.state_tracking.show_dont_tell import sdt_utils
-from gtod.state_tracking.utils import sgd_utils
-
+from gtod.datasets.state_tracking.show_dont_tell import sdt_utils, common, sdt_prompts
+from gtod.datasets.state_tracking.utils import sgd_utils
 
 Prompt = sdt_prompts.Prompt
 

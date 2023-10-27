@@ -16,8 +16,7 @@
 
 import sys
 import pytest
-from gtod.state_tracking.show_dont_tell import common
-from gtod.state_tracking.show_dont_tell import create_sgd_sdt_data
+from gtod.datasets.state_tracking.show_dont_tell import create_sgd_sdt_data, common
 
 
 @pytest.mark.parametrize(
@@ -37,7 +36,7 @@ from gtod.state_tracking.show_dont_tell import create_sgd_sdt_data
             False,
             "sgd_text_sdt_separated_dialogue_active",
         ),
-        (   
+        (
             "all",
             True,
             False,
@@ -156,9 +155,7 @@ def test_generate_sgdx_data(tmp_path, testdata_dir):
         "all_slots_slot_names_intent_mcq",
     ],
 )
-def test_generate_intent(
-    mcq_intents, ref_output_filename, tmp_path, testdata_dir
-):
+def test_generate_intent(mcq_intents, ref_output_filename, tmp_path, testdata_dir):
     temp_output = tmp_path / "output"
     ref_output = testdata_dir / "show_dont_tell" / ref_output_filename
 

@@ -27,10 +27,11 @@ import string
 import attrs
 import tyro
 
-from gtod.state_tracking.d3st.common import DescriptionType, MultipleChoiceFormat
-from gtod.state_tracking.utils import multiwoz_utils
-from gtod.state_tracking.utils import text_to_text_utils
-
+from gtod.datasets.state_tracking.d3st.common import (
+    DescriptionType,
+    MultipleChoiceFormat,
+)
+from gtod.datasets.state_tracking.utils import text_to_text_utils, multiwoz_utils
 
 Json = multiwoz_utils.Json
 SchemaInfo = multiwoz_utils.SchemaInfo
@@ -150,7 +151,9 @@ def create_schemaless_data(
         elif options.multiple_choice == "a":
             return letter
         else:
-            raise ValueError(f"Invalid multiple choice format {options.multiple_choice}")
+            raise ValueError(
+                f"Invalid multiple choice format {options.multiple_choice}"
+            )
 
     def _process_one_turn(
         dialog_id: str,
@@ -343,9 +346,7 @@ def main(config: CliConfig):
     split_to_examples["dev_test"] = split_to_examples["dev"] + split_to_examples["test"]
 
     for split, examples in split_to_examples.items():
-        text_to_text_utils.write_data(
-            examples, config.output_dir / f"{split}"
-        )
+        text_to_text_utils.write_data(examples, config.output_dir / f"{split}")
 
 
 if __name__ == "__main__":

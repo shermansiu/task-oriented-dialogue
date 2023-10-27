@@ -82,7 +82,9 @@ class SchemaInfo:
 
 
 def load_data(
-    data_path: pathlib.Path, multiwoz_version: str | MultiwozVersion, is_trade: bool = False
+    data_path: pathlib.Path,
+    multiwoz_version: str | MultiwozVersion,
+    is_trade: bool = False,
 ) -> MultiwozData:
     """Loads MultiWOZ dataset.
 
@@ -305,7 +307,9 @@ class MultiwozDataclassData:
 
 
 def load_data_as_dataclasses(
-    data_path: pathlib.Path, multiwoz_version: str | MultiwozVersion, is_trade: bool = False
+    data_path: pathlib.Path,
+    multiwoz_version: str | MultiwozVersion,
+    is_trade: bool = False,
 ) -> MultiwozDataclassData:
     """Loads MultiWOZ dataset.
 

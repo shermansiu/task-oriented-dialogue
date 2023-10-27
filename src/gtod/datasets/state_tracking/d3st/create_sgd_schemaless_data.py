@@ -36,7 +36,7 @@ import attrs
 import cattrs
 import tyro
 
-from gtod.state_tracking.d3st.common import (
+from gtod.datasets.state_tracking.d3st.common import (
     MultipleChoiceFormat,
     GenerationLevel,
     DataFormat,

@@ -14,15 +14,13 @@
 
 """Tests for SGD text data generation."""
 
-import contextlib
 import filecmp
 import pathlib
 import sys
 
 import pytest
 
-from gtod.state_tracking.d3st import create_sgd_schemaless_data
-from gtod.state_tracking.d3st import common
+from gtod.datasets.state_tracking.d3st import common, create_sgd_schemaless_data
 
 
 @pytest.mark.parametrize(

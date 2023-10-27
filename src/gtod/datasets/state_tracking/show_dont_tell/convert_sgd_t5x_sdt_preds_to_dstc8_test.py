@@ -21,9 +21,10 @@ import sys
 
 import pytest
 
-from gtod.state_tracking.show_dont_tell import common
-from gtod.state_tracking.show_dont_tell import convert_sgd_t5x_sdt_preds_to_dstc8
-
+from gtod.datasets.state_tracking.show_dont_tell import (
+    common,
+    convert_sgd_t5x_sdt_preds_to_dstc8,
+)
 
 DIALOG_ID_TO_DIALOGUE = {
     "1_00000": {
@@ -54,18 +55,18 @@ DIALOG_ID_TO_DIALOGUE = {
 @pytest.fixture
 def dummy_config():
     return convert_sgd_t5x_sdt_preds_to_dstc8.CliConfig(
-        pathlib.Path("."),
-        pathlib.Path("."),
-        pathlib.Path("."),
+        pathlib.Path(""),
+        pathlib.Path(""),
+        pathlib.Path(""),
     )
 
 
 @pytest.fixture
 def dummy_intent_config():
     return convert_sgd_t5x_sdt_preds_to_dstc8.CliConfig(
-        pathlib.Path("."),
-        pathlib.Path("."),
-        pathlib.Path("."),
+        pathlib.Path(""),
+        pathlib.Path(""),
+        pathlib.Path(""),
         evaluate_intent_acc=True,
     )
 

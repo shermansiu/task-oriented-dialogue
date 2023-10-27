@@ -24,8 +24,8 @@ import random
 import string
 import typing as tp
 
-from gtod.state_tracking.show_dont_tell import sdt_prompts
-from gtod.state_tracking.utils import sgd_utils
+from gtod.datasets.state_tracking.show_dont_tell import sdt_prompts
+from gtod.datasets.state_tracking.utils import sgd_utils
 
 Prompt = sdt_prompts.Prompt
 Schemas = list[tp.Any]

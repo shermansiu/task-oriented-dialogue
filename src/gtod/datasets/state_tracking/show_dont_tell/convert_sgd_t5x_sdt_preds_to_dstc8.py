@@ -25,8 +25,8 @@ import attrs
 import cattrs
 import tyro
 
-from gtod.state_tracking.show_dont_tell import common
-from gtod.state_tracking.utils import sgd_utils
+from gtod.datasets.state_tracking.show_dont_tell import common
+from gtod.datasets.state_tracking.utils import sgd_utils
 
 
 @attrs.frozen

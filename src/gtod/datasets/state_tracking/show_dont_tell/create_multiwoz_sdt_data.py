@@ -29,11 +29,8 @@ import random
 import attrs
 import tyro
 
-from gtod.state_tracking.show_dont_tell import common
-from gtod.state_tracking.show_dont_tell import sdt_prompts
-from gtod.state_tracking.show_dont_tell import sdt_utils
-from gtod.state_tracking.utils import multiwoz_utils
-from gtod.state_tracking.utils import text_to_text_utils
+from gtod.datasets.state_tracking.show_dont_tell import sdt_utils, common, sdt_prompts
+from gtod.datasets.state_tracking.utils import text_to_text_utils, multiwoz_utils
 
 
 @attrs.frozen
