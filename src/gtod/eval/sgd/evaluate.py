@@ -28,7 +28,7 @@ import attrs
 import numpy as np
 import tyro
 
-from gtod.eval.schema_guided_dst import metrics
+from gtod.eval.sgd import metrics
 from gtod.datasets.state_tracking.show_dont_tell.common import DatasetSplit
 
 
