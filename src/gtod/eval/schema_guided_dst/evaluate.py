@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2023 The Google Research Authors.
+# Copyright 2022 The Google Research Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,50 +20,47 @@ from __future__ import division
 from __future__ import print_function
 
 import collections
+import enum
 import json
-import os
+import logging
+import pathlib
+import attrs
 import numpy as np
-import tensorflow.compat.v1 as tf
+import tyro
 
-from schema_guided_dst import metrics
+from gtod.eval.schema_guided_dst import metrics
+from gtod.datasets.state_tracking.show_dont_tell.common import DatasetSplit
 
-flags = tf.flags
-FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    "prediction_dir",
-    None,
-    "Directory in which all JSON files combined are predictions of the"
-    " evaluation set on a single model checkpoint. We evaluate these JSON files"
-    " by DSTC8 metrics.",
-)
-flags.DEFINE_string(
-    "dstc8_data_dir",
-    None,
-    "Directory for the downloaded DSTC8 data, which contains the dialogue files"
-    " and schema files of all datasets (train, dev, test)",
-)
-flags.DEFINE_enum(
-    "eval_set", None, ["train", "dev", "test"], "Dataset split for evaluation."
-)
-flags.DEFINE_string(
-    "output_metric_file",
-    None,
-    "Single JSON output file containing aggregated evaluation metrics results"
-    " for all predictions files in FLAGS.prediction_dir.",
-)
-flags.DEFINE_boolean(
-    "joint_acc_across_turn",
-    False,
-    "Whether to compute joint accuracy across turn instead of across service. "
-    "Should be set to True when conducting multiwoz style evaluation.",
-)
-flags.DEFINE_boolean(
-    "use_fuzzy_match",
-    True,
-    "Whether to use fuzzy string matching when comparing non-categorical slot "
-    "values. Should be set to False when conducting multiwoz style evaluation.",
-)
+# TODO(s8siu): Move the common dataclasses into another directory higher up.
+
+
+@attrs.define(frozen=True)
+class CliConfig:
+    """Configuration for evaluating DSTC8 SGD slot and intent predictions.
+
+    Attributes:
+        prediction_dir: Directory in which all JSON files combined are predictions of the
+            evaluation set on a single model checkpoint. We evaluate these JSON files
+            by DSTC8 metrics.
+        dstc8_data_dir: Directory for the downloaded DSTC8 data, which contains the dialogue files
+            and schema files of all datasets (train, dev, test)
+        eval_set: Dataset split for evaluation.
+        output_metric_file: Single JSON output file containing aggregated evaluation metrics results
+            for all predictions files in FLAGS.prediction_dir.
+        joint_acc_across_turn: Whether to compute joint accuracy across turn instead of across service.
+            Should be set to True when conducting multiwoz style evaluation.
+        use_fuzzy_match: Whether to use fuzzy string matching when comparing non-categorical slot
+            values. Should be set to False when conducting multiwoz style evaluation.
+    """
+
+    prediction_dir: str
+    dstc8_data_dir: str
+    eval_set: DatasetSplit
+    output_metric_file: str
+    joint_acc_across_turn: bool = False
+    use_fuzzy_match: bool = True
+
 
 ALL_SERVICES = "#ALL_SERVICES"
 SEEN_SERVICES = "#SEEN_SERVICES"
@@ -77,7 +74,7 @@ PER_FRAME_OUTPUT_FILENAME = "dialogues_and_metrics.json"
 def get_service_set(schema_path):
     """Get the set of all services present in a schema."""
     service_set = set()
-    with tf.gfile.GFile(schema_path) as f:
+    with schema_path.open() as f:
         schema = json.load(f)
         for service in schema:
             service_set.add(service["service_name"])
@@ -92,15 +89,12 @@ def get_in_domain_services(schema_path_1, schema_path_2):
 def get_dataset_as_dict(file_path_patterns):
     """Read the DSTC8 json dialog data as dictionary with dialog ID as keys."""
     dataset_dict = {}
-    if isinstance(file_path_patterns, list):
-        list_fp = file_path_patterns
-    else:
-        list_fp = sorted(tf.gfile.Glob(file_path_patterns))
+    list_fp = sorted(list(file_path_patterns))
     for fp in list_fp:
-        if PER_FRAME_OUTPUT_FILENAME in fp:
+        if PER_FRAME_OUTPUT_FILENAME in str(fp):
             continue
-        tf.logging.info("Loading file: %s", fp)
-        with tf.gfile.GFile(fp) as f:
+        logging.info("Loading file: %s", fp)
+        with fp.open() as f:
             data = json.load(f)
             if isinstance(data, list):
                 for dial in data:
@@ -114,17 +108,17 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services):
     """Calculate the DSTC8 metrics.
 
     Args:
-      dataset_ref: The ground truth dataset represented as a dict mapping dialogue
-        id to the corresponding dialogue.
-      dataset_hyp: The predictions in the same format as `dataset_ref`.
-      service_schemas: A dict mapping service name to the schema for the service.
-      in_domain_services: The set of services which are present in the training
-        set.
+        dataset_ref: The ground truth dataset represented as a dict mapping dialogue
+            id to the corresponding dialogue.
+        dataset_hyp: The predictions in the same format as `dataset_ref`.
+        service_schemas: A dict mapping service name to the schema for the service.
+        in_domain_services: The set of services which are present in the training
+            set.
 
     Returns:
-      A dict mapping a metric collection name to a dict containing the values
-      for various metrics. Each metric collection aggregates the metrics across
-      a specific set of frames in the dialogues.
+        A dict mapping a metric collection name to a dict containing the values
+        for various metrics. Each metric collection aggregates the metrics across
+        a specific set of frames in the dialogues.
     """
     # Metrics can be aggregated in various ways, eg over all dialogues, only for
     # dialogues containing unseen services or for dialogues corresponding to a
@@ -168,8 +162,8 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services):
                 continue
 
             if turn_ref["utterance"] != turn_hyp["utterance"]:
-                tf.logging.info("Ref utt: %s", turn_ref["utterance"])
-                tf.logging.info("Hyp utt: %s", turn_hyp["utterance"])
+                logging.info("Ref utt: %s", turn_ref["utterance"])
+                logging.info("Hyp utt: %s", turn_hyp["utterance"])
                 raise ValueError(
                     "Utterances don't match for dialogue with id {}".format(dial_id)
                 )
@@ -200,7 +194,7 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services):
                     frame_ref, frame_hyp
                 )
                 goal_accuracy_dict = metrics.get_average_and_joint_goal_accuracy(
-                    frame_ref, frame_hyp, service, FLAGS.use_fuzzy_match
+                    frame_ref, frame_hyp, service, args.use_fuzzy_match
                 )
 
                 frame_metric = {
@@ -237,7 +231,7 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services):
                     for metric_key, metric_value in frame_metric.items():
                         if metric_value != metrics.NAN_VAL:
                             if (
-                                FLAGS.joint_acc_across_turn
+                                args.joint_acc_across_turn
                                 and metric_key in joint_metrics
                             ):
                                 metric_collections_per_turn[domain_key][
@@ -247,7 +241,7 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services):
                                 metric_collections[domain_key][metric_key].append(
                                     metric_value
                                 )
-            if FLAGS.joint_acc_across_turn:
+            if args.joint_acc_across_turn:
                 # Conduct multiwoz style evaluation that computes joint goal accuracy
                 # across all the slot values of all the domains for each turn.
                 for domain_key in metric_collections_per_turn:
@@ -268,26 +262,30 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services):
     return all_metric_aggregate, per_frame_metric
 
 
-def main(_):
-    tf.logging.set_verbosity(tf.logging.INFO)
+def main():
+    # tf.logging.set_verbosity(tf.logging.INFO)
 
     in_domain_services = get_in_domain_services(
-        os.path.join(FLAGS.dstc8_data_dir, FLAGS.eval_set, "schema.json"),
-        os.path.join(FLAGS.dstc8_data_dir, "train", "schema.json"),
+        pathlib.Path(f"{args.dstc8_data_dir}/{args.eval_set.name}/schema.json"),
+        pathlib.Path(f"{args.dstc8_data_dir}/train/schema.json"),
     )
-    with tf.io.gfile.GFile(
-        os.path.join(FLAGS.dstc8_data_dir, FLAGS.eval_set, "schema.json")
-    ) as f:
+    with pathlib.Path(
+        f"{args.dstc8_data_dir}/{args.eval_set.name}/schema.json"
+    ).open() as f:
         eval_services = {}
         list_services = json.load(f)
         for service in list_services:
             eval_services[service["service_name"]] = service
 
     dataset_ref = get_dataset_as_dict(
-        os.path.join(FLAGS.dstc8_data_dir, FLAGS.eval_set, "dialogues_*.json")
+        pathlib.Path(f"{args.dstc8_data_dir}/{args.eval_set.name}").glob(
+            "dialogues_*.json"
+        )
     )
-    dataset_hyp = get_dataset_as_dict(os.path.join(FLAGS.prediction_dir, "*.json"))
-    tf.logging.info(
+    dataset_hyp = get_dataset_as_dict(
+        pathlib.Path(f"{args.prediction_dir}").glob("*.json")
+    )
+    logging.info(
         "len(dataset_hyp)=%d, len(dataset_ref)=%d", len(dataset_hyp), len(dataset_ref)
     )
     if not dataset_hyp or not dataset_ref:
@@ -296,23 +294,20 @@ def main(_):
     all_metric_aggregate, _ = get_metrics(
         dataset_ref, dataset_hyp, eval_services, in_domain_services
     )
-    tf.logging.info("Dialog metrics: %s", str(all_metric_aggregate[ALL_SERVICES]))
+    logging.info("Dialog metrics: %s", str(all_metric_aggregate[ALL_SERVICES]))
 
     # Write the aggregated metrics values.
-    with tf.gfile.GFile(FLAGS.output_metric_file, "w") as f:
+    with pathlib.Path(args.output_metric_file).open("w") as f:
         json.dump(
             all_metric_aggregate, f, indent=2, separators=(",", ": "), sort_keys=True
         )
     # Write the per-frame metrics values with the corrresponding dialogue frames.
-    with tf.gfile.GFile(
-        os.path.join(FLAGS.prediction_dir, PER_FRAME_OUTPUT_FILENAME), "w"
+    with pathlib.Path(f"{args.prediction_dir}/{PER_FRAME_OUTPUT_FILENAME}").open(
+        "w"
     ) as f:
         json.dump(dataset_hyp, f, indent=2, separators=(",", ": "))
 
 
 if __name__ == "__main__":
-    flags.mark_flag_as_required("prediction_dir")
-    flags.mark_flag_as_required("dstc8_data_dir")
-    flags.mark_flag_as_required("eval_set")
-    flags.mark_flag_as_required("output_metric_file")
-    tf.compat.v1.app.run(main)
+    args = tyro.cli(CliConfig)
+    main()
